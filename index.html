@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordDomain Puzzle Generator Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f0f0f0; }
+        h1 { color: #333; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        #puzzle { background: #f8f9fa; padding: 15px; border-radius: 5px; font-size: 14px; line-height: 1.4; }
+        .info { background: #e9ecef; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px 0; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .game-container { display: flex; gap: 20px; margin-top: 20px; }
+        .grid-container { flex: 1; }
+        .controls { flex: 1; }
+        .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; max-width: 300px; }
+        .tile { 
+            width: 45px; height: 45px; 
+            border: 2px solid #ddd; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 18px; font-weight: bold; 
+            cursor: pointer; 
+            background: white;
+            transition: all 0.2s;
+        }
+        .tile:hover { background: #f0f0f0; }
+        .tile.selected { background: #007bff; color: white; }
+        .tile.start { border-color: #28a745; border-width: 3px; }
+        .tile.end { border-color: #dc3545; border-width: 3px; }
+        .tile.disabled { background: #f8f9fa; color: #6c757d; cursor: not-allowed; }
+        .tile.used { background: #e9ecef; color: #adb5bd; cursor: not-allowed; }
+        .current-word { font-size: 18px; margin: 10px 0; min-height: 25px; }
+        .medal-display { font-size: 16px; margin: 10px 0; min-height: 25px; }
+        .game-controls { margin: 10px 0; }
+        .game-controls button { margin: 5px; }
+        .submit-btn { background: #28a745; }
+        .submit-btn:hover { background: #218838; }
+        .undo-btn { background: #ffc107; color: #212529; }
+        .undo-btn:hover { background: #e0a800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 WordDomain Puzzle Generator Test</h1>
+        <button onclick="generateNewPuzzle()">Generate New Puzzle</button>
+        <div class="info">
+            <strong>Instructions:</strong> Open browser console (F12) to see debug output with EasyPath and word sequence.
+        </div>
+        <h3>Puzzle Grid:</h3>
+        <pre id="puzzle"></pre>
+        <div class="info">
+            <strong>Legend:</strong> The grid shows the 6×6 puzzle. Check console for the solution path and word sequence.
+        </div>
+        
+        <!-- Interactive Gameplay -->
+        <div class="game-container">
+            <div class="grid-container">
+                <h3>🎮 Play the Puzzle:</h3>
+                <div id="gameGrid" class="grid"></div>
+                <div class="current-word">Current word: <span id="currentWordDisplay"></span></div>
+                <div class="medal-display" id="medalDisplay"></div>
+            </div>
+            
+            <div class="controls">
+                <h3>🎯 Game Controls:</h3>
+                <div class="game-controls">
+                    <button class="submit-btn" onclick="submitWord()" id="submitBtn" disabled>Submit Word</button>
+                    <button onclick="resetGame()">Reset Game</button>
+                </div>
+                
+                <div class="info">
+                    <strong>How to Play:</strong><br>
+                    • Click adjacent tiles to form words<br>
+                    • Each word must start from the green START tile<br>
+                    • Minimum 3 letters per word<br>
+                    • Click the last selected tile to undo it<br>
+                    • Submit when you have a complete word<br>
+                    • Win by reaching the red END tile!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { generatePuzzle } from "./core/puzzleGenerator.js";
+        import { solveOptimal } from "./core/puzzleSolver.js";
+        import { isValidWord, getMinWordLength } from "./core/wordValidator.js";
+
+        // Game state
+        let currentPuzzle = null;
+        let currentPath = [];
+        let currentStart = { row: 0, col: 0 };
+        let userWords = [];
+        let gameWon = false;
+        let usedTiles = new Set(); // Track tiles that have been used in submitted words
+
+        async function generateNewPuzzle() {
+            try {
+                console.log("🎲 Generating new puzzle...");
+                document.getElementById("puzzle").textContent = "Loading...";
+                
+                const puzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1);
+
+                // Solve for optimal path
+                console.log("🧩 Solving optimal path...");
+                const { optimalWords, optimalPath, goldMoves } = await solveOptimal(puzzle);
+                
+                // Attach optimal solution to puzzle
+                puzzle.optimalWords = optimalWords;
+                puzzle.optimalPath = optimalPath;
+                puzzle.goldMoves = goldMoves;
+
+                // Store puzzle and initialize game state
+                currentPuzzle = puzzle;
+                currentPath = [];
+                currentStart = { row: puzzle.start.row, col: puzzle.start.col };
+                userWords = [];
+                gameWon = false;
+                usedTiles = new Set();
+
+                // Render grid in the browser (original console output)
+                const gridStr = puzzle.grid.map(row => row.join(" ")).join("\n");
+                document.getElementById("puzzle").textContent = gridStr;
+
+                // Create interactive game grid
+                createInteractiveGrid(puzzle);
+                updateGameDisplay();
+
+                // Debug logs
+                console.log("🎮 Generated Puzzle #" + puzzle.id);
+                console.log("📍 Easy Path:", puzzle.easyPath);
+                console.log("📝 Easy Word Sequence:", puzzle.easyWords.join(" → "));
+                console.log("🏆 Optimal Word Sequence:", puzzle.optimalWords.join(" → "));
+                console.log("🥇 Gold Moves:", puzzle.goldMoves);
+                console.log("🎯 START: (0,0)");
+                console.log("🏁 END: (5,5)");
+                console.log("=".repeat(50));
+                
+            } catch (error) {
+                console.error("❌ Error generating puzzle:", error);
+                document.getElementById("puzzle").textContent = "Error: " + error.message;
+            }
+        }
+
+        // Game functions
+        function createInteractiveGrid(puzzle) {
+            const gameGrid = document.getElementById("gameGrid");
+            gameGrid.innerHTML = "";
+            
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 6; col++) {
+                    const tile = document.createElement("div");
+                    tile.className = "tile";
+                    tile.textContent = puzzle.grid[row][col];
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+                    
+                    // Mark start and end tiles
+                    if (row === currentStart.row && col === currentStart.col) {
+                        tile.classList.add("start");
+                    }
+                    if (row === puzzle.end.row && col === puzzle.end.col) {
+                        tile.classList.add("end");
+                    }
+                    
+                    // Mark used tiles
+                    const tileKey = `${row},${col}`;
+                    if (usedTiles.has(tileKey)) {
+                        tile.classList.add("used");
+                    }
+                    
+                    tile.onclick = () => selectTile(row, col);
+                    gameGrid.appendChild(tile);
+                }
+            }
+        }
+
+        function selectTile(row, col) {
+            if (gameWon || !currentPuzzle) return;
+            
+            const tile = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            const tileKey = `${row},${col}`;
+            
+            // Check if tile is already used
+            if (usedTiles.has(tileKey)) {
+                return; // Can't select used tiles
+            }
+            
+            // Check if this is the last selected tile (undo functionality)
+            if (currentPath.length > 0) {
+                const lastTile = currentPath[currentPath.length - 1];
+                if (lastTile.row === row && lastTile.col === col) {
+                    // Undo last selection
+                    currentPath.pop();
+                    tile.classList.remove("selected");
+                    updateGameDisplay();
+                    return;
+                }
+            }
+            
+            // Check if this is the current start tile
+            if (currentPath.length === 0) {
+                if (row !== currentStart.row || col !== currentStart.col) {
+                    return; // Must start from the current start tile
+                }
+            } else {
+                // Check if this tile is adjacent to the last selected tile
+                const lastTile = currentPath[currentPath.length - 1];
+                if (!isAdjacent(lastTile, { row, col })) {
+                    return; // Not adjacent
+                }
+                
+                // Check if tile is already selected in current word
+                if (currentPath.some(t => t.row === row && t.col === col)) {
+                    return; // Already selected
+                }
+            }
+            
+            // Add tile to current path
+            currentPath.push({ row, col });
+            tile.classList.add("selected");
+            
+            updateGameDisplay();
+        }
+
+        function isAdjacent(tile1, tile2) {
+            const rowDiff = Math.abs(tile1.row - tile2.row);
+            const colDiff = Math.abs(tile1.col - tile2.col);
+            return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
+        }
+
+        function updateGameDisplay() {
+            // Update current word display
+            const currentWord = currentPath.map(tile => 
+                currentPuzzle.grid[tile.row][tile.col]
+            ).join("");
+            document.getElementById("currentWordDisplay").textContent = currentWord;
+            
+            // Update button states
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.disabled = currentPath.length < getMinWordLength();
+        }
+
+        async function submitWord() {
+            if (!currentPuzzle || currentPath.length < getMinWordLength()) return;
+            
+            const word = currentPath.map(tile => 
+                currentPuzzle.grid[tile.row][tile.col]
+            ).join("");
+            
+            const valid = await isValidWord(word);
+            
+            if (valid) {
+                // Valid word - add to user words
+                userWords.push(word);
+                
+                // Mark all tiles as used except the last one (which becomes new START)
+                const lastTile = currentPath[currentPath.length - 1];
+                currentPath.forEach(tile => {
+                    const tileKey = `${tile.row},${tile.col}`;
+                    // Don't mark the last tile as used since it becomes the new START
+                    if (tile.row !== lastTile.row || tile.col !== lastTile.col) {
+                        usedTiles.add(tileKey);
+                    }
+                });
+                
+                // The last tile becomes the new start
+                currentStart = { row: lastTile.row, col: lastTile.col };
+                
+                // Clear current path and reset grid
+                currentPath = [];
+                createInteractiveGrid(currentPuzzle);
+                updateGameDisplay();
+                
+                // Check win condition
+                if (lastTile.row === currentPuzzle.end.row && lastTile.col === currentPuzzle.end.col) {
+                    gameWon = true;
+                    showMedal();
+                }
+                
+                console.log(`✅ Valid word: "${word}" (${userWords.length} words so far)`);
+            } else {
+                // Invalid word - reset game
+                console.log(`❌ Invalid word: "${word}" - resetting game`);
+                resetGame();
+            }
+        }
+
+
+        function resetGame() {
+            if (!currentPuzzle) return;
+            
+            currentPath = [];
+            currentStart = { row: currentPuzzle.start.row, col: currentPuzzle.start.col };
+            userWords = [];
+            gameWon = false;
+            usedTiles = new Set();
+            
+            createInteractiveGrid(currentPuzzle);
+            updateGameDisplay();
+            
+            console.log("🔄 Game reset to initial state");
+        }
+
+        function showMedal() {
+            const medalDisplay = document.getElementById("medalDisplay");
+            const userWordCount = userWords.length;
+            const optimalWordCount = currentPuzzle.goldMoves;
+            
+            let medal = "";
+            if (userWordCount === optimalWordCount) {
+                medal = "🥇 GOLD MEDAL! Perfect solution!";
+            } else if (userWordCount === optimalWordCount + 1) {
+                medal = "🥈 SILVER MEDAL! Great job!";
+            } else {
+                medal = "🥉 BRONZE MEDAL! You completed it!";
+            }
+            
+            medalDisplay.innerHTML = `<strong>${medal}</strong><br>Your solution: ${userWords.join(" → ")} (${userWordCount} words)<br>Optimal: ${optimalWordCount} words`;
+        }
+
+        // Make functions available globally
+        window.generateNewPuzzle = generateNewPuzzle;
+        window.submitWord = submitWord;
+        window.resetGame = resetGame;
+
+        // Generate initial puzzle on page load
+        generateNewPuzzle();
+    </script>
+</body>
+</html>
