@@ -45,13 +45,20 @@
     <div class="container">
         <h1>🎮 WordDomain Puzzle Generator Test</h1>
         <button onclick="generateNewPuzzle()">Generate New Puzzle</button>
+        <select id="puzzleSize" style="margin-left: 10px;">
+            <option value="4">4×4 (Easy)</option>
+            <option value="5">5×5</option>
+            <option value="6" selected>6×6 (Medium)</option>
+            <option value="7">7×7</option>
+            <option value="8">8×8 (Hard)</option>
+        </select>
         <div class="info">
             <strong>Instructions:</strong> Open browser console (F12) to see debug output with EasyPath and word sequence.
         </div>
         <h3>Puzzle Grid:</h3>
         <pre id="puzzle"></pre>
         <div class="info">
-            <strong>Legend:</strong> The grid shows the 6×6 puzzle. Check console for the solution path and word sequence.
+            <strong>Legend:</strong> The grid shows the puzzle. Check console for the solution path and word sequence.
         </div>
         
         <!-- Interactive Gameplay -->
@@ -101,7 +108,8 @@
                 console.log("🎲 Generating new puzzle...");
                 document.getElementById("puzzle").textContent = "Loading...";
                 
-                const puzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1);
+                const gridSize = parseInt(document.getElementById("puzzleSize").value);
+                const puzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1, gridSize);
 
                 // Solve for optimal path
                 console.log("🧩 Solving optimal path...");
@@ -134,8 +142,8 @@
                 console.log("📝 Easy Word Sequence:", puzzle.easyWords.join(" → "));
                 console.log("🏆 Optimal Word Sequence:", puzzle.optimalWords.join(" → "));
                 console.log("🥇 Gold Moves:", puzzle.goldMoves);
-                console.log("🎯 START: (0,0)");
-                console.log("🏁 END: (5,5)");
+                console.log(`🎯 START: (${puzzle.start.row},${puzzle.start.col})`);
+                console.log(`🏁 END: (${puzzle.end.row},${puzzle.end.col})`);
                 console.log("=".repeat(50));
                 
             } catch (error) {
@@ -148,9 +156,15 @@
         function createInteractiveGrid(puzzle) {
             const gameGrid = document.getElementById("gameGrid");
             gameGrid.innerHTML = "";
+
+            const rows = puzzle.grid.length;
+            const cols = puzzle.grid[0].length;
+
+            // Dynamically set grid columns per puzzle size
+            gameGrid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
             
-            for (let row = 0; row < 6; row++) {
-                for (let col = 0; col < 6; col++) {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
                     const tile = document.createElement("div");
                     tile.className = "tile";
                     tile.textContent = puzzle.grid[row][col];

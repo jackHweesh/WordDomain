@@ -3,24 +3,23 @@ import { getWordsStartingWith, getRandomWord } from "./dictionaryLoader";
 
 // TODO: build solvable puzzles (grid + easy path)
 
-const GRID_SIZE = 6;
 const START: Coordinate = { row: 0, col: 0 };
-const END: Coordinate = { row: 5, col: 5 };
 
 /**
  * Generate a solvable puzzle with a guaranteed solution path
  */
-export async function generatePuzzle(puzzleId: number = 1): Promise<PuzzleData> {
+export async function generatePuzzle(puzzleId: number = 1, gridSize: number = 6): Promise<PuzzleData> {
+  const END: Coordinate = { row: gridSize - 1, col: gridSize - 1 };
   console.log(`🎯 Generating Puzzle #${puzzleId}`);
   
   // Initialize empty grid
-  const grid = initializeGrid();
+  const grid = initializeGrid(gridSize);
   
   // Generate the easy solution path using SAW approach
-  const { path: easyPath, words: easyWords } = await generateEasyPathSAW(grid);
+  const { path: easyPath, words: easyWords } = await generateEasyPathSAW(grid, gridSize);
   
   // Fill remaining empty cells with random letters
-  fillRemainingCells(grid);
+  fillRemainingCells(grid, gridSize);
   
   // Create puzzle data
   const puzzle: PuzzleData = {
@@ -42,13 +41,13 @@ export async function generatePuzzle(puzzleId: number = 1): Promise<PuzzleData> 
 }
 
 /**
- * Initialize a 6x6 grid with empty strings
+ * Initialize a grid with empty strings
  */
-function initializeGrid(): string[][] {
+function initializeGrid(gridSize: number): string[][] {
   const grid: string[][] = [];
-  for (let row = 0; row < GRID_SIZE; row++) {
+  for (let row = 0; row < gridSize; row++) {
     grid[row] = [];
-    for (let col = 0; col < GRID_SIZE; col++) {
+    for (let col = 0; col < gridSize; col++) {
       grid[row][col] = "";
     }
   }
@@ -58,7 +57,7 @@ function initializeGrid(): string[][] {
 /**
  * Generate the easy solution path using SAW approach (guaranteed)
  */
-async function generateEasyPathSAW(grid: string[][]): Promise<{ path: Coordinate[], words: string[] }> {
+async function generateEasyPathSAW(grid: string[][], gridSize: number): Promise<{ path: Coordinate[], words: string[] }> {
   const maxAttempts = 50;
   
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -77,7 +76,8 @@ async function generateEasyPathSAW(grid: string[][]): Promise<{ path: Coordinate
       console.log(`📝 Word chain: ${words.join(" → ")} (T=${T})`);
       
       // C. Build exact-length SAW path of length T ending at END
-      const path = buildExactLengthSAW(T);
+      const END: Coordinate = { row: gridSize - 1, col: gridSize - 1 };
+      const path = buildExactLengthSAW(T, gridSize, END);
       if (!path) {
         console.log(`⚠️  Failed to build SAW path of length ${T}`);
         continue;
@@ -180,7 +180,7 @@ async function pickValidWordChain(): Promise<string[] | null> {
 /**
  * Build an exact-length Self-Avoiding Walk (SAW) path that ends at END
  */
-function buildExactLengthSAW(T: number): Coordinate[] | null {
+function buildExactLengthSAW(T: number, gridSize: number, END: Coordinate): Coordinate[] | null {
   const maxAttempts = 200; // Cap total SAW attempts
   
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -222,8 +222,8 @@ function buildExactLengthSAW(T: number): Coordinate[] | null {
           const neighbor = { row: current.row + dir.row, col: current.col + dir.col };
           const key = `${neighbor.row},${neighbor.col}`;
           const neighborDist = Math.abs(neighbor.row - END.row) + Math.abs(neighbor.col - END.col);
-          return neighbor.row >= 0 && neighbor.row < GRID_SIZE &&
-                 neighbor.col >= 0 && neighbor.col < GRID_SIZE &&
+          return neighbor.row >= 0 && neighbor.row < gridSize &&
+                 neighbor.col >= 0 && neighbor.col < gridSize &&
                  !visited.has(key) &&
                  neighborDist <= remainingSteps - 1;
         });
@@ -240,8 +240,8 @@ function buildExactLengthSAW(T: number): Coordinate[] | null {
         }))
         .filter(({ coord }) => {
           const key = `${coord.row},${coord.col}`;
-          return coord.row >= 0 && coord.row < GRID_SIZE &&
-                 coord.col >= 0 && coord.col < GRID_SIZE &&
+          return coord.row >= 0 && coord.row < gridSize &&
+                 coord.col >= 0 && coord.col < gridSize &&
                  !visited.has(key) &&
                  // Lock END until last step
                  !(coord.row === END.row && coord.col === END.col && remainingSteps > 1);
@@ -409,9 +409,9 @@ function placeWordsOnPath(grid: string[][], words: string[], path: Coordinate[])
 /**
  * Fill remaining empty cells with random letters
  */
-function fillRemainingCells(grid: string[][]): void {
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
+function fillRemainingCells(grid: string[][], gridSize: number): void {
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
       if (grid[row][col] === "") {
         grid[row][col] = getRandomLetter();
       }

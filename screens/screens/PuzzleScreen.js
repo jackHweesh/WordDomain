@@ -8,13 +8,14 @@ const PuzzleScreen = () => {
     const [puzzle, setPuzzle] = useState(null);
     const [gameState, setGameState] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [gridSize, setGridSize] = useState(6);
     // Initialize puzzle and game state
     const initializeGame = useCallback(async () => {
         setLoading(true);
         try {
             console.log("🎮 Initializing new puzzle...");
             // Generate puzzle
-            const newPuzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1);
+            const newPuzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1, gridSize);
             // Solve for optimal path
             const { optimalWords, optimalPath, goldMoves } = await solveOptimal(newPuzzle);
             // Attach optimal solution to puzzle
@@ -47,7 +48,7 @@ const PuzzleScreen = () => {
         finally {
             setLoading(false);
         }
-    }, []);
+    }, [gridSize]);
     // Initialize on mount
     useEffect(() => {
         initializeGame();
@@ -223,7 +224,18 @@ const PuzzleScreen = () => {
     return (React.createElement("div", { style: { padding: '20px', maxWidth: '800px', margin: '0 auto' } },
         React.createElement("div", { style: { marginBottom: '20px', textAlign: 'center' } },
             React.createElement("h1", null, "\uD83C\uDFAE WordDomain Puzzle"),
-            React.createElement("button", { onClick: initializeGame, style: { margin: '10px' } }, "New Puzzle")),
+            React.createElement("button", { onClick: initializeGame, style: { margin: '10px' } }, "New Puzzle"),
+            React.createElement("select", { 
+                value: gridSize, 
+                onChange: (e) => setGridSize(parseInt(e.target.value)),
+                style: { marginLeft: '10px' }
+            }, [
+                React.createElement("option", { key: 4, value: 4 }, "4×4 (Easy)"),
+                React.createElement("option", { key: 5, value: 5 }, "5×5"),
+                React.createElement("option", { key: 6, value: 6 }, "6×6 (Medium)"),
+                React.createElement("option", { key: 7, value: 7 }, "7×7"),
+                React.createElement("option", { key: 8, value: 8 }, "8×8 (Hard)")
+            ])),
         React.createElement(HUD, { currentWord: getCurrentWord(), onSubmit: handleSubmit, onBacktrack: handleBacktrack, goldMoves: gameState.goldMoves, playedCount: gameState.playedWords.length, status: gameState.status, medal: gameState.medal }),
         React.createElement(Board, { grid: gameState.grid, start: gameState.currentStart, end: puzzle.end, selection: gameState.selection, onTilePress: handleTilePress }),
         gameState.playedWords.length > 0 && (React.createElement("div", { style: { marginTop: '20px' } },

@@ -1000,6 +1000,7 @@ fully
 unable
 square
 list
+computer
 missed
 golden
 bread
@@ -1281,7 +1282,7 @@ source
 shoot
 grief
 lip
-honour
+honor
 cloud
 chairs
 badly
@@ -1495,7 +1496,7 @@ rifle
 kicked
 settle
 clever
-colour
+color
 gas
 guards
 mixed
@@ -1609,7 +1610,7 @@ keeps
 lately
 rank
 cash
-centre
+center
 fail
 trace
 sprang
@@ -2275,7 +2276,7 @@ combat
 cats
 spine
 sunset
-humour
+humor
 movies
 dashed
 sport
@@ -2308,7 +2309,7 @@ waking
 opens
 juice
 beasts
-labour
+labor
 pains
 idiot
 gloomy
@@ -2411,7 +2412,6 @@ prey
 rat
 parent
 shirts
-litde
 melted
 heroes
 cheer
@@ -2489,7 +2489,6 @@ toe
 mount
 noises
 commit
-dat
 ink
 vanity
 apron
@@ -2516,8 +2515,6 @@ shaft
 obeyed
 moaned
 flush
-und
-vol
 copper
 nuts
 anyhow
@@ -2753,7 +2750,7 @@ torch
 jerk
 monkey
 rim
-tho
+though
 vulgar
 reads
 merit
@@ -2814,7 +2811,6 @@ stored
 mule
 ditch
 dwell
-fro
 yonder
 judges
 trucks
@@ -3058,7 +3054,6 @@ saints
 rumors
 edited
 tavern
-est
 films
 float
 script
@@ -3762,7 +3757,7 @@ finer
 evenly
 pal
 richly
-armour
+armor
 puff
 wail
 racial
@@ -3985,7 +3980,6 @@ clergy
 slate
 fooled
 undone
-twas
 raged
 dreamy
 afore
@@ -3994,7 +3988,6 @@ tying
 margin
 insect
 kinda
-gettin
 witty
 tensed
 pulpit
@@ -4113,3 +4106,4 @@ jack
 mace
 metric
 zebra
+floral
