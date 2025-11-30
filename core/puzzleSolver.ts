@@ -1,6 +1,6 @@
 // TODO: implement optimal solver for WordDomain puzzles
-import { Coordinate, PuzzleData } from "./types.js";
-import { loadBigDictionary } from "./dictionaryLoader.js";
+import { Coordinate, PuzzleData } from "./types";
+import { loadBigDictionary } from "./dictionaryLoader";
 
 /**
  * Trie node for efficient word prefix and completion checking

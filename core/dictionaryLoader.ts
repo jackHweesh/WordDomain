@@ -1,7 +1,9 @@
 /**
  * Dictionary Loader Service
- * 
- * Loads dictionary files using fetch() for browser compatibility
+ *
+ * Loads dictionary files
+ * SMALL DICTIONARY: Loaded via require from assets/data/
+ * BIG DICTIONARY: Loaded via require from data/ (lazy-loaded JSON)
  */
 
 let smallDictionaryCache: string[] | null = null;
@@ -16,12 +18,8 @@ export async function loadSmallDictionary(): Promise<string[]> {
   }
 
   try {
-    const response = await fetch("/data/smalldictionary.json");
-    if (!response.ok) {
-      throw new Error(`Failed to load small dictionary: ${response.status}`);
-    }
-    
-    smallDictionaryCache = await response.json();
+    const smallDictionaryData = require('../assets/data/smalldictionary.json');
+    smallDictionaryCache = smallDictionaryData as string[];
     console.log(`📚 Loaded small dictionary: ${smallDictionaryCache.length} words`);
     return smallDictionaryCache;
   } catch (error) {
@@ -32,6 +30,8 @@ export async function loadSmallDictionary(): Promise<string[]> {
 
 /**
  * Load the big dictionary for word validation
+ * 
+ * Lazy-loaded JSON dictionary from data/bigdictionary.json
  */
 export async function loadBigDictionary(): Promise<string[]> {
   if (bigDictionaryCache) {
@@ -39,12 +39,8 @@ export async function loadBigDictionary(): Promise<string[]> {
   }
 
   try {
-    const response = await fetch("/data/bigdictionary.json");
-    if (!response.ok) {
-      throw new Error(`Failed to load big dictionary: ${response.status}`);
-    }
-    
-    bigDictionaryCache = await response.json();
+    const words = require('../data/bigdictionary.json');
+    bigDictionaryCache = words as string[];
     console.log(`📚 Loaded big dictionary: ${bigDictionaryCache.length} words`);
     return bigDictionaryCache;
   } catch (error) {
@@ -68,4 +64,3 @@ export async function getRandomWord(): Promise<string> {
   const dictionary = await loadSmallDictionary();
   return dictionary[Math.floor(Math.random() * dictionary.length)];
 }
-

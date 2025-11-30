@@ -1,5 +1,5 @@
 // TODO: validate user words using bigdictionary
-import { loadBigDictionary } from "./dictionaryLoader.js";
+import { loadBigDictionary } from "./dictionaryLoader";
 
 // Cache for the big dictionary
 let bigDictionaryCache: string[] | null = null;
