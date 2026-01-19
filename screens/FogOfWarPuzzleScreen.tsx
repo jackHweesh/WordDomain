@@ -14,21 +14,23 @@ import {
 const screenWidth = Dimensions.get('window').width;
 import { generatePuzzle } from '../core/puzzleGenerator';
 import { solveOptimal } from '../core/puzzleSolver';
+import { getFogOfWarPuzzle } from '../services/fogOfWarPuzzleCache';
 import { isValidWord, getMinWordLength } from '../core/wordValidator';
 import { loadBigDictionary } from '../core/dictionaryLoader';
 import { Coordinate, PuzzleData } from '../core/types';
-import Board from '../components/Board';
+import FogOfWarBoard from '../components/FogOfWarBoard';
 import HUD from '../components/HUD';
-import { getPuzzle, getPuzzleCount, getCategories } from '../services/puzzleLoader';
-import { Category, saveMedal, unlockNextPuzzle } from '../services/progressStorage';
+import { getPuzzleCount, getCategories } from '../services/puzzleLoader';
+import { Category } from '../services/progressStorage';
+import { saveMedal, unlockNextPuzzle } from '../services/fogOfWarProgressStorage';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
 import MedalIcon from '../components/MedalIcon';
 import PathVisualization from '../components/PathVisualization';
 import Confetti from '../components/Confetti';
-import { Colors, Spacing, Fonts, Radius, Shadows } from '../src/styles/theme';
 import { audioManager } from '../services/audioManager';
 import { SoundCategory } from '../services/audioManager';
+import { Colors, Spacing, Fonts, Radius, Shadows } from '../src/styles/theme';
 
 interface GameState {
   grid: string[][];
@@ -57,7 +59,7 @@ const CATEGORY_TITLES: { [key in Category]: string } = {
   '8x8': '8×8',
 };
 
-export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzle, onBackToHome }: PuzzleScreenProps) {
+export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSelectPuzzle, onBackToHome }: PuzzleScreenProps) {
   const [puzzle, setPuzzle] = useState<PuzzleData | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,45 +73,114 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   const [fadingTiles, setFadingTiles] = useState<Set<string>>(new Set());
   const [hintedTiles, setHintedTiles] = useState<Set<string>>(new Set());
   const [glowingHintTiles, setGlowingHintTiles] = useState<Set<string>>(new Set()); // Tiles that are currently glowing green
+  // SIMPLIFIED HINT TRACKING:
+  // - Track which word indices were hinted (commonHintedWordIndices, goldHintedWordIndices)
+  // - At win time, calculate which hinted words match final solution (commonHintUsedWordIndicesAtWin, goldHintUsedWordIndicesAtWin)
   // Common Hint (easy path) tracking
   const [commonHintCount, setCommonHintCount] = useState(0);
   const [commonHintedWordIndices, setCommonHintedWordIndices] = useState<Set<number>>(new Set());
   const [commonHintedWordIndicesAtWin, setCommonHintedWordIndicesAtWin] = useState<Set<number>>(new Set());
-  const [commonHintUsedWordIndices, setCommonHintUsedWordIndices] = useState<Set<number>>(new Set()); // Track which common hint words were actually used
   const [commonHintUsedWordIndicesAtWin, setCommonHintUsedWordIndicesAtWin] = useState<Set<number>>(new Set());
   // Gold Hint (optimal path) tracking
   const [goldHintCount, setGoldHintCount] = useState(0);
   const [goldHintedWordIndices, setGoldHintedWordIndices] = useState<Set<number>>(new Set());
   const [goldHintedWordIndicesAtWin, setGoldHintedWordIndicesAtWin] = useState<Set<number>>(new Set());
-  const [goldHintUsedWordIndices, setGoldHintUsedWordIndices] = useState<Set<number>>(new Set()); // Track which gold hint words were actually used
   const [goldHintUsedWordIndicesAtWin, setGoldHintUsedWordIndicesAtWin] = useState<Set<number>>(new Set());
+  const [fogMap, setFogMap] = useState<boolean[][]>([]); // 2D array: true = hidden, false = visible
   const winModalOpacity = useRef(new Animated.Value(0)).current;
   const winCardScale = useRef(new Animated.Value(0.9)).current;
   const winCardOpacity = useRef(new Animated.Value(0)).current;
+
+  // Initialize fogMap: all tiles hidden except start and its neighbors
+  const initializeFogMap = useCallback((grid: string[][], start: Coordinate): boolean[][] => {
+    const gridSize = grid.length;
+    const fog: boolean[][] = [];
+    
+    // Initialize all tiles as hidden (true = hidden)
+    for (let row = 0; row < gridSize; row++) {
+      fog[row] = [];
+      for (let col = 0; col < gridSize; col++) {
+        fog[row][col] = true; // All tiles start hidden
+      }
+    }
+    
+    // Reveal start tile
+    fog[start.row][start.col] = false;
+    
+    // Reveal all adjacent tiles (8-directional)
+    const directions = [
+      { row: -1, col: -1 }, { row: -1, col: 0 }, { row: -1, col: 1 },
+      { row: 0, col: -1 }, { row: 0, col: 1 },
+      { row: 1, col: -1 }, { row: 1, col: 0 }, { row: 1, col: 1 },
+    ];
+    
+    directions.forEach(dir => {
+      const newRow = start.row + dir.row;
+      const newCol = start.col + dir.col;
+      
+      if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+        if (grid[newRow][newCol]) { // Only reveal if tile has a letter
+          fog[newRow][newCol] = false;
+        }
+      }
+    });
+    
+    return fog;
+  }, []);
+
+  // Update fogMap based on current selection - SIMPLE: current tile + all adjacent (within 1 tile)
+  const updateFogMap = useCallback((grid: string[][], selection: Coordinate[], start: Coordinate, end: Coordinate): boolean[][] => {
+    const gridSize = grid.length;
+    const fog: boolean[][] = [];
+    
+    // Initialize all tiles as hidden (true = hidden/fogged)
+    for (let row = 0; row < gridSize; row++) {
+      fog[row] = [];
+      for (let col = 0; col < gridSize; col++) {
+        fog[row][col] = true;
+      }
+    }
+    
+    // Get current tile (last in selection, or start if no selection)
+    const currentTile = selection.length > 0 ? selection[selection.length - 1] : start;
+    
+    // Reveal current tile
+    if (currentTile.row >= 0 && currentTile.row < gridSize && currentTile.col >= 0 && currentTile.col < gridSize) {
+      fog[currentTile.row][currentTile.col] = false;
+      
+      // Reveal all tiles within 1 tile away (8-directional adjacency)
+      const directions = [
+        { row: -1, col: -1 }, { row: -1, col: 0 }, { row: -1, col: 1 },
+        { row: 0, col: -1 },                       { row: 0, col: 1 },
+        { row: 1, col: -1 },  { row: 1, col: 0 },  { row: 1, col: 1 },
+      ];
+      
+      for (const dir of directions) {
+        const newRow = currentTile.row + dir.row;
+        const newCol = currentTile.col + dir.col;
+        
+        // Check bounds and reveal if valid
+        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+          fog[newRow][newCol] = false;
+        }
+      }
+    }
+    
+    return fog;
+  }, []);
 
   const initializeGame = useCallback(async () => {
     setLoading(true);
     try {
       let newPuzzle: PuzzleData;
       
+      // Fog of War uses cached puzzles for consistency (like Classic mode)
       if (category && puzzleId) {
-        const loadedPuzzle = await getPuzzle(category, puzzleId);
-        if (!loadedPuzzle) {
-          throw new Error(`Failed to load puzzle ${category}-${puzzleId}`);
-        }
-        newPuzzle = loadedPuzzle;
-        
-        if (!newPuzzle.optimalWords || !newPuzzle.optimalPath || !newPuzzle.goldMoves) {
-          console.warn(`Puzzle ${category}-${puzzleId} missing optimal solution, computing...`);
-          const { optimalWords, optimalPath, goldMoves } = await solveOptimal(newPuzzle);
-          newPuzzle.optimalWords = optimalWords;
-          newPuzzle.optimalPath = optimalPath;
-          newPuzzle.goldMoves = goldMoves;
-        }
+        newPuzzle = await getFogOfWarPuzzle(category, puzzleId);
       } else {
+        // Custom mode - generate random puzzle
         newPuzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1, gridSize);
         const { optimalWords, optimalPath, goldMoves } = await solveOptimal(newPuzzle);
-        
         newPuzzle.optimalWords = optimalWords;
         newPuzzle.optimalPath = optimalPath;
         newPuzzle.goldMoves = goldMoves;
@@ -128,6 +199,9 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       
       setPuzzle(newPuzzle);
       setGameState(initialState);
+      // Initialize fogMap - all hidden except start and neighbors
+      const initialFog = initializeFogMap(workingGrid, newPuzzle.start);
+      setFogMap(initialFog);
       setShowWinModal(false);
       // Reset hints
       setHintedTiles(new Set());
@@ -135,12 +209,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       setCommonHintCount(0);
       setCommonHintedWordIndices(new Set());
       setCommonHintedWordIndicesAtWin(new Set());
-      setCommonHintUsedWordIndices(new Set());
       setCommonHintUsedWordIndicesAtWin(new Set());
       setGoldHintCount(0);
       setGoldHintedWordIndices(new Set());
       setGoldHintedWordIndicesAtWin(new Set());
-      setGoldHintUsedWordIndices(new Set());
       setGoldHintUsedWordIndicesAtWin(new Set());
       // Reset animations
       winModalOpacity.setValue(0);
@@ -153,7 +225,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     } finally {
       setLoading(false);
     }
-  }, [category, puzzleId, gridSize, winModalOpacity, winCardScale, winCardOpacity]);
+  }, [category, puzzleId, gridSize, winModalOpacity, winCardScale, winCardOpacity, initializeFogMap]);
 
   useEffect(() => {
     initializeGame();
@@ -177,92 +249,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     if (!gameState || !puzzle) return '';
     return gameState.selection.map(coord => gameState.grid[coord.row][coord.col]).join('').toLowerCase();
   }, [gameState, puzzle]);
-
-  // Helper function to get hint path text
-  const getHintPathText = useCallback((): string[] => {
-    const paths: string[] = [];
-    
-    if (puzzle && commonHintCount > 0 && puzzle.easyWords) {
-      const revealedWords = puzzle.easyWords.slice(0, commonHintCount);
-      if (revealedWords.length > 0) {
-        paths.push(`Common Path: ${revealedWords.join(' --> ')}`);
-      }
-    }
-    
-    if (puzzle && goldHintCount > 0 && puzzle.optimalWords) {
-      const revealedWords = puzzle.optimalWords.slice(0, goldHintCount);
-      if (revealedWords.length > 0) {
-        paths.push(`Gold Path: ${revealedWords.join(' --> ')}`);
-      }
-    }
-    
-    return paths;
-  }, [puzzle, commonHintCount, goldHintCount]);
-
-  const handleTilePress = useCallback((coord: Coordinate) => {
-    if (!gameState || !puzzle) return;
-    if (gameState.status === 'won') return;
-
-    const tileKey = `${coord.row},${coord.col}`;
-    
-    // Check for unselect (tapping last selected tile)
-    if (gameState.selection.length > 1) {
-      const lastTile = gameState.selection[gameState.selection.length - 1];
-      if (lastTile.row === coord.row && lastTile.col === coord.col) {
-        // Play tile press sound for unselect
-        audioManager.playSound(SoundCategory.TILE_PRESS);
-        const newSelection = gameState.selection.slice(0, -1);
-        setGameState({ ...gameState, selection: newSelection, status: 'playing' });
-        setTileAnimationTrigger({ coord, type: 'unselect' });
-        setTimeout(() => setTileAnimationTrigger(null), 200);
-        return;
-      }
-    } else if (gameState.selection.length === 1) {
-      const startTile = gameState.selection[0];
-      if (startTile.row === coord.row && startTile.col === coord.col) {
-        // Can't unselect start tile
-        setTileAnimationTrigger({ coord, type: 'invalid' });
-        setTimeout(() => setTileAnimationTrigger(null), 200);
-        return;
-      }
-    }
-    
-    // Check for invalid taps
-    if (gameState.usedTiles.has(tileKey)) {
-      setTileAnimationTrigger({ coord, type: 'invalid' });
-      setTimeout(() => setTileAnimationTrigger(null), 200);
-      return;
-    }
-    
-    if (gameState.selection.length === 0) {
-      if (coord.row !== gameState.currentStart.row || coord.col !== gameState.currentStart.col) {
-        setTileAnimationTrigger({ coord, type: 'invalid' });
-        setTimeout(() => setTileAnimationTrigger(null), 200);
-        return;
-      }
-    } else {
-      const lastTile = gameState.selection[gameState.selection.length - 1];
-      if (!isAdjacent8(lastTile, coord)) {
-        setTileAnimationTrigger({ coord, type: 'invalid' });
-        setTimeout(() => setTileAnimationTrigger(null), 200);
-        return;
-      }
-      
-      if (gameState.selection.some(t => t.row === coord.row && t.col === coord.col)) {
-        setTileAnimationTrigger({ coord, type: 'invalid' });
-        setTimeout(() => setTileAnimationTrigger(null), 200);
-        return;
-      }
-    }
-    
-    // Valid selection
-    // Play tile press sound for selection
-    audioManager.playSound(SoundCategory.TILE_PRESS);
-    const newSelection = [...gameState.selection, coord];
-    setGameState({ ...gameState, selection: newSelection, status: 'playing' });
-    setTileAnimationTrigger({ coord, type: 'select' });
-    setTimeout(() => setTileAnimationTrigger(null), 200);
-  }, [gameState, puzzle, isAdjacent8]);
 
   // Helper function to get the path coordinates for a specific word index
   // FIXED: Walks the combined path word by word and detects overlap duplication automatically
@@ -344,6 +330,105 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     return true;
   }, []);
 
+  // Helper function to get hint path text
+  const getHintPathText = useCallback((): string[] => {
+    const paths: string[] = [];
+    
+    if (puzzle && commonHintCount > 0 && puzzle.easyWords) {
+      const revealedWords = puzzle.easyWords.slice(0, commonHintCount);
+      if (revealedWords.length > 0) {
+        paths.push(`Common Path: ${revealedWords.join(' --> ')}`);
+      }
+    }
+    
+    if (puzzle && goldHintCount > 0 && puzzle.optimalWords) {
+      const revealedWords = puzzle.optimalWords.slice(0, goldHintCount);
+      if (revealedWords.length > 0) {
+        paths.push(`Gold Path: ${revealedWords.join(' --> ')}`);
+      }
+    }
+    
+    return paths;
+  }, [puzzle, commonHintCount, goldHintCount]);
+
+  const handleTilePress = useCallback((coord: Coordinate) => {
+    if (!gameState || !puzzle) return;
+    if (gameState.status === 'won') return;
+
+    const tileKey = `${coord.row},${coord.col}`;
+    
+    // Check if tile is fogged (hidden) - block clicks on fogged tiles
+    if (fogMap[coord.row] && fogMap[coord.row][coord.col]) {
+      setTileAnimationTrigger({ coord, type: 'invalid' });
+      setTimeout(() => setTileAnimationTrigger(null), 200);
+      return;
+    }
+    
+    // Check for unselect (tapping last selected tile)
+    if (gameState.selection.length > 1) {
+      const lastTile = gameState.selection[gameState.selection.length - 1];
+      if (lastTile.row === coord.row && lastTile.col === coord.col) {
+        // Play tile press sound for unselect
+        audioManager.playSound(SoundCategory.TILE_PRESS);
+        const newSelection = gameState.selection.slice(0, -1);
+        setGameState({ ...gameState, selection: newSelection, status: 'playing' });
+        // Update fogMap based on new selection
+        const newFog = updateFogMap(gameState.grid, newSelection, gameState.currentStart, puzzle.end);
+        setFogMap(newFog);
+        setTileAnimationTrigger({ coord, type: 'unselect' });
+        setTimeout(() => setTileAnimationTrigger(null), 200);
+        return;
+      }
+    } else if (gameState.selection.length === 1) {
+      const startTile = gameState.selection[0];
+      if (startTile.row === coord.row && startTile.col === coord.col) {
+        // Can't unselect start tile
+        setTileAnimationTrigger({ coord, type: 'invalid' });
+        setTimeout(() => setTileAnimationTrigger(null), 200);
+        return;
+      }
+    }
+    
+    // Check for invalid taps
+    if (gameState.usedTiles.has(tileKey)) {
+      setTileAnimationTrigger({ coord, type: 'invalid' });
+      setTimeout(() => setTileAnimationTrigger(null), 200);
+      return;
+    }
+    
+    if (gameState.selection.length === 0) {
+      if (coord.row !== gameState.currentStart.row || coord.col !== gameState.currentStart.col) {
+        setTileAnimationTrigger({ coord, type: 'invalid' });
+        setTimeout(() => setTileAnimationTrigger(null), 200);
+        return;
+      }
+    } else {
+      const lastTile = gameState.selection[gameState.selection.length - 1];
+      if (!isAdjacent8(lastTile, coord)) {
+        setTileAnimationTrigger({ coord, type: 'invalid' });
+        setTimeout(() => setTileAnimationTrigger(null), 200);
+        return;
+      }
+      
+      if (gameState.selection.some(t => t.row === coord.row && t.col === coord.col)) {
+        setTileAnimationTrigger({ coord, type: 'invalid' });
+        setTimeout(() => setTileAnimationTrigger(null), 200);
+        return;
+      }
+    }
+    
+    // Valid selection
+    // Play tile press sound for selection
+    audioManager.playSound(SoundCategory.TILE_PRESS);
+    const newSelection = [...gameState.selection, coord];
+    setGameState({ ...gameState, selection: newSelection, status: 'playing' });
+    // Update fogMap based on new selection
+    const newFog = updateFogMap(gameState.grid, newSelection, gameState.currentStart, puzzle.end);
+    setFogMap(newFog);
+    setTileAnimationTrigger({ coord, type: 'select' });
+    setTimeout(() => setTileAnimationTrigger(null), 200);
+  }, [gameState, puzzle, isAdjacent8, fogMap, updateFogMap]);
+
   const handleSubmit = useCallback(async () => {
     if (!gameState || !puzzle) return;
     if (gameState.selection.length < getMinWordLength()) return;
@@ -363,42 +448,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
         path: [...gameState.selection],
       };
       
+      // Note: We no longer track hint usage during play
+      // All hint matching is calculated at win time for simplicity and accuracy
+      
       const lastTile = gameState.selection[gameState.selection.length - 1];
-      
-      // Check if this word matches any common hint words
-      const newCommonHintUsedWordIndices = new Set(commonHintUsedWordIndices);
-      if (puzzle.easyWords && puzzle.easyPath) {
-        // Check all hinted words from 0 to commonHintCount-1
-        for (let wordIndex = 0; wordIndex < commonHintCount; wordIndex++) {
-          if (wordIndex < puzzle.easyWords.length) {
-            // Get the path for this word
-            const hintWord = puzzle.easyWords[wordIndex];
-            const hintPath = getWordPathForIndex(puzzle.easyWords, puzzle.easyPath, wordIndex);
-            if (checkWordMatchesHint(newPlayedWord, hintWord, hintPath)) {
-              newCommonHintUsedWordIndices.add(wordIndex);
-            }
-          }
-        }
-      }
-      
-      // Check if this word matches any gold hint words
-      const newGoldHintUsedWordIndices = new Set(goldHintUsedWordIndices);
-      if (puzzle.optimalWords && puzzle.optimalPath) {
-        // Check all hinted words from 0 to goldHintCount-1
-        for (let wordIndex = 0; wordIndex < goldHintCount; wordIndex++) {
-          if (wordIndex < puzzle.optimalWords.length) {
-            // Get the path for this word
-            const hintWord = puzzle.optimalWords[wordIndex];
-            const hintPath = getWordPathForIndex(puzzle.optimalWords, puzzle.optimalPath, wordIndex);
-            if (checkWordMatchesHint(newPlayedWord, hintWord, hintPath)) {
-              newGoldHintUsedWordIndices.add(wordIndex);
-            }
-          }
-        }
-      }
-      
-      setCommonHintUsedWordIndices(newCommonHintUsedWordIndices);
-      setGoldHintUsedWordIndices(newGoldHintUsedWordIndices);
       
       // Mark tiles to fade out (all except the last one)
       const tilesToFade = new Set<string>();
@@ -444,7 +497,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           }
         }
         
-        setGameState({
+        const newGameState: GameState = {
           ...gameState,
           currentStart: newStart,
           selection: [newStart],
@@ -452,7 +505,11 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           status: isWon ? 'won' : 'playing',
           medal,
           usedTiles: newUsedTiles,
-        });
+        };
+        setGameState(newGameState);
+        // Update fogMap based on new start position
+        const newFog = updateFogMap(newGameState.grid, [newStart], newStart, puzzle.end);
+        setFogMap(newFog);
         
         // Clear fading tiles
         setFadingTiles(new Set());
@@ -470,27 +527,50 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             hintPath: Coordinate[] | null | undefined
           ): Set<number> => {
             const matchedIndices = new Set<number>();
-            if (!hintWords || !hintPath) return matchedIndices;
+            if (!hintWords || !hintPath) {
+              console.log('🔍 DEBUG [Calculate Matches]: No hintWords or hintPath provided');
+              return matchedIndices;
+            }
             
             // Convert Set to Array to ensure explicit iteration through ALL elements
             const hintedIndicesArray = Array.from(hintedIndices);
+            console.log('🔍 DEBUG [Calculate Matches]: Processing hinted indices:', hintedIndicesArray);
+            console.log('🔍 DEBUG [Calculate Matches]: Final played words:', finalPlayedWords.map(w => ({ word: w.word, pathLength: w.path.length })));
             
             // For each hinted word index - process ALL of them
             for (const wordIndex of hintedIndicesArray) {
-              if (wordIndex >= hintWords.length) continue;
+              if (wordIndex >= hintWords.length) {
+                console.log('🔍 DEBUG [Calculate Matches]: Skipping wordIndex', wordIndex, '- out of bounds');
+                continue;
+              }
               
               const hintWord = hintWords[wordIndex];
               const hintPathForWord = getWordPathForIndex(hintWords, hintPath, wordIndex);
+              console.log('🔍 DEBUG [Calculate Matches]: Checking wordIndex', wordIndex, '- hintWord:', hintWord, '- hintPathLength:', hintPathForWord.length);
+              console.log('🔍 DEBUG [Calculate Matches]: Hint path for wordIndex', wordIndex, ':', hintPathForWord.map(c => `(${c.row},${c.col})`).join(' -> '));
               
               // Check if any played word matches this hint word and path exactly
               // Process ALL played words to find the match
+              let foundMatch = false;
               for (const playedWord of finalPlayedWords) {
-                if (checkWordMatchesHint(playedWord, hintWord, hintPathForWord)) {
+                console.log('🔍 DEBUG [Calculate Matches]:   Comparing with playedWord:', playedWord.word, '- pathLength:', playedWord.path.length);
+                console.log('🔍 DEBUG [Calculate Matches]:   Played path:', playedWord.path.map(c => `(${c.row},${c.col})`).join(' -> '));
+                
+                const matches = checkWordMatchesHint(playedWord, hintWord, hintPathForWord);
+                console.log('🔍 DEBUG [Calculate Matches]:   Match result:', matches);
+                
+                if (matches) {
+                  console.log('🔍 DEBUG [Calculate Matches]: ✅ MATCH FOUND for wordIndex', wordIndex, '- playedWord:', playedWord.word);
                   matchedIndices.add(wordIndex);
+                  foundMatch = true;
                   break; // Found a match for this wordIndex, move to next wordIndex
                 }
               }
+              if (!foundMatch) {
+                console.log('🔍 DEBUG [Calculate Matches]: ❌ NO MATCH for wordIndex', wordIndex, '- hintWord:', hintWord);
+              }
             }
+            console.log('🔍 DEBUG [Calculate Matches]: Final matched indices:', Array.from(matchedIndices));
             return matchedIndices;
           };
           
@@ -506,7 +586,14 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             puzzle.optimalPath
           );
           
-          // Store for visualization
+          // Store for visualization (using simpler naming)
+          console.log('🔍 DEBUG [Win Time]: ===== HINT TRACKING SUMMARY =====');
+          console.log('🔍 DEBUG [Win Time]: commonHintedWordIndices:', Array.from(commonHintedWordIndices));
+          console.log('🔍 DEBUG [Win Time]: commonHintMatches (used):', Array.from(commonHintMatches));
+          console.log('🔍 DEBUG [Win Time]: goldHintedWordIndices:', Array.from(goldHintedWordIndices));
+          console.log('🔍 DEBUG [Win Time]: goldHintMatches (used):', Array.from(goldHintMatches));
+          console.log('🔍 DEBUG [Win Time]: ====================================');
+          
           setCommonHintedWordIndicesAtWin(new Set(commonHintedWordIndices));
           setGoldHintedWordIndicesAtWin(new Set(goldHintedWordIndices));
           setCommonHintUsedWordIndicesAtWin(commonHintMatches);
@@ -514,47 +601,45 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           
           // Reset hints when puzzle is completed
           setHintedTiles(new Set());
+          setGlowingHintTiles(new Set());
           setCommonHintCount(0);
           setCommonHintedWordIndices(new Set());
-          setCommonHintUsedWordIndices(new Set());
           setGoldHintCount(0);
           setGoldHintedWordIndices(new Set());
-          setGoldHintUsedWordIndices(new Set());
           
           // Play celebration sound when win modal appears
           audioManager.playSound(SoundCategory.CELEBRATION);
           
           // Show win modal with animation
           setShowWinModal(true);
+        Animated.parallel([
+          Animated.timing(winModalOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
           Animated.parallel([
-            Animated.timing(winModalOpacity, {
+            Animated.spring(winCardScale, {
               toValue: 1,
-              duration: 200,
+              tension: 50,
+              friction: 7,
               useNativeDriver: true,
             }),
-            Animated.parallel([
-              Animated.spring(winCardScale, {
-                toValue: 1,
-                tension: 50,
-                friction: 7,
-                useNativeDriver: true,
-              }),
-              Animated.timing(winCardOpacity, {
-                toValue: 1,
-                duration: 250,
-                useNativeDriver: true,
-              }),
-            ]),
-          ]).start();
+            Animated.timing(winCardOpacity, {
+              toValue: 1,
+              duration: 250,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]).start();
         }
       }, 300); // Fade duration
-      
     } else {
       // Play deny sound for invalid word
       audioManager.playSound(SoundCategory.DENY);
       
       const workingGrid = puzzle.grid.map(row => [...row]);
-      setGameState({
+      const resetState: GameState = {
         ...gameState,
         grid: workingGrid,
         currentStart: puzzle.start,
@@ -562,11 +647,15 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
         playedWords: [],
         status: 'invalid',
         usedTiles: new Set<string>(),
-      });
+      };
+      setGameState(resetState);
+      // Reset fogMap
+      const resetFog = initializeFogMap(workingGrid, puzzle.start);
+      setFogMap(resetFog);
       // Don't reset hints on invalid word - only clear visible tiles
       setHintedTiles(new Set());
     }
-  }, [gameState, puzzle, category, puzzleId, hintedTiles, commonHintedWordIndices, goldHintedWordIndices, commonHintUsedWordIndices, goldHintUsedWordIndices, getWordPathForIndex, checkWordMatchesHint]);
+  }, [gameState, puzzle, category, puzzleId, updateFogMap, initializeFogMap, hintedTiles, commonHintedWordIndices, goldHintedWordIndices, getWordPathForIndex, checkWordMatchesHint]);
 
   // Helper function to check if playedWords match easyWords in order
   const checkWordsMatchEasyPath = useCallback((playedWords: Array<{ word: string; path: Coordinate[] }>, easyWords: string[]): boolean => {
@@ -583,7 +672,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   }, []);
 
   // Helper function to get coordinates for a specific word index from a path
-  // Returns the coordinates that make up just that one word
   const getWordCoordinates = useCallback((words: string[], path: Coordinate[], wordIndex: number): string[] => {
     const coords: string[] = [];
     if (!words || !path || wordIndex < 0 || wordIndex >= words.length) return coords;
@@ -644,6 +732,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       medal: undefined,
     } : null);
     
+    // Reset fogMap
+    const resetFog = initializeFogMap(workingGrid, puzzle.start);
+    setFogMap(resetFog);
+    
     // Get the next word index to reveal
     const nextWordIndex = commonHintCount;
     if (nextWordIndex >= puzzle.easyWords.length) return; // All words already revealed
@@ -652,6 +744,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     setCommonHintedWordIndices(prev => {
       const updated = new Set(prev);
       updated.add(nextWordIndex);
+      console.log('🔍 DEBUG [Hint Called]: Added wordIndex', nextWordIndex, '| All hinted indices:', Array.from(updated));
       return updated;
     });
     
@@ -708,7 +801,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     
     // Close the modal
     setShowSolutions(false);
-  }, [puzzle, commonHintCount, getWordCoordinates]);
+  }, [puzzle, commonHintCount, getWordCoordinates, initializeFogMap, hintedTiles]);
 
   const handleGoldHint = useCallback(() => {
     if (!puzzle || !puzzle.optimalWords || !puzzle.optimalPath) return;
@@ -725,6 +818,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       usedTiles: new Set<string>(),
       medal: undefined,
     } : null);
+    
+    // Reset fogMap
+    const resetFog = initializeFogMap(workingGrid, puzzle.start);
+    setFogMap(resetFog);
     
     // Get the next word index to reveal
     const nextWordIndex = goldHintCount;
@@ -789,7 +886,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     
     // Close the modal
     setShowSolutions(false);
-  }, [puzzle, goldHintCount, getWordCoordinates, hintedTiles]);
+  }, [puzzle, goldHintCount, getWordCoordinates, initializeFogMap, hintedTiles]);
 
   const handleRestart = useCallback(() => {
     if (!gameState || !puzzle) return;
@@ -805,6 +902,9 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       usedTiles: new Set<string>(),
       medal: undefined,
     });
+    // Reset fogMap to initial state
+    const resetFog = initializeFogMap(workingGrid, puzzle.start);
+    setFogMap(resetFog);
     setShowWinModal(false);
     // Don't reset hints - keep hint count and clear visible tiles
     setHintedTiles(new Set());
@@ -812,7 +912,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     winModalOpacity.setValue(0);
     winCardScale.setValue(0.9);
     winCardOpacity.setValue(0);
-  }, [gameState, puzzle, winModalOpacity, winCardScale, winCardOpacity]);
+  }, [gameState, puzzle, winModalOpacity, winCardScale, winCardOpacity, initializeFogMap]);
 
   const getNextPuzzle = useCallback(async (): Promise<{ category: Category; puzzleId: number } | null> => {
     if (!category || !puzzleId) return null;
@@ -950,9 +1050,9 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           </View>
         </View>
 
-        {/* Grid - DO NOT MODIFY */}
+        {/* Grid with Fog of War */}
         <View style={styles.boardContainer}>
-          <Board
+          <FogOfWarBoard
             grid={gameState.grid}
             start={gameState.currentStart}
             end={puzzle.end}
@@ -963,6 +1063,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             glowingHintTiles={glowingHintTiles}
             onTilePress={handleTilePress}
             animationTrigger={tileAnimationTrigger}
+            fogMap={fogMap}
           />
         </View>
 
@@ -980,16 +1081,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             style={styles.submitButton}
             playSound={false}
           />
-        </View>
-
-        {/* Current Word Capsule */}
-        <View style={styles.currentWordContainer}>
-          <Text style={styles.currentWordLabel}>
-            Current Word:
-          </Text>
-          <Text style={styles.currentWordValue}>
-            {getCurrentWord()}
-          </Text>
         </View>
 
         {/* Hint Paths Display */}
@@ -1335,42 +1426,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.md,
   },
-  currentWordContainer: {
-    alignSelf: 'center',
-    backgroundColor: Colors.tileBackground,
-    borderColor: Colors.surfaceDark,
-    borderWidth: 1.5,
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.lg,
-    alignItems: 'center',
-  },
-  currentWordLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 2,
-  },
-  currentWordValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  hintPathsContainer: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    width: '100%',
-  },
-  hintPathText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    textAlign: 'left',
-    marginBottom: Spacing.xs,
-  },
   actionButtonsRow: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.md,
@@ -1435,6 +1490,20 @@ const styles = StyleSheet.create({
   },
   hintButton: {
     width: '100%',
+  },
+  hintPathsContainer: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    width: '100%',
+  },
+  hintPathText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'left',
+    marginBottom: Spacing.xs,
   },
   solutionSection: {
     marginBottom: Spacing.lg,

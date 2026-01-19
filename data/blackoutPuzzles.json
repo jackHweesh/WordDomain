@@ -1,0 +1,5800 @@
+{
+  "4x4": [
+    {
+      "id": 1,
+      "grid": [
+        [
+          "S",
+          "R",
+          "I",
+          "E"
+        ],
+        [
+          "E",
+          "I",
+          "S",
+          "E"
+        ],
+        [
+          "W",
+          "L",
+          "D",
+          "L"
+        ],
+        [
+          "O",
+          "T",
+          "E",
+          "Y"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 3,
+        "col": 1
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        }
+      ],
+      "easyWords": [
+        "series",
+        "slow",
+        "widely",
+        "yet"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 2,
+      "grid": [
+        [
+          "O",
+          "E",
+          "N",
+          "N"
+        ],
+        [
+          "F",
+          "T",
+          "A",
+          "I"
+        ],
+        [
+          "T",
+          "H",
+          "G",
+          "T"
+        ],
+        [
+          "S",
+          "W",
+          "I",
+          "F"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "often",
+        "nights",
+        "swift",
+        "tan"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 3,
+      "grid": [
+        [
+          "Z",
+          "L",
+          "U",
+          "N"
+        ],
+        [
+          "E",
+          "L",
+          "E",
+          "S"
+        ],
+        [
+          "R",
+          "E",
+          "Y",
+          "D"
+        ],
+        [
+          "O",
+          "B",
+          "R",
+          "A"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "zero",
+        "obey",
+        "yards",
+        "sullen"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 4,
+      "grid": [
+        [
+          "A",
+          "W",
+          "O",
+          "B"
+        ],
+        [
+          "R",
+          "O",
+          "E",
+          "L"
+        ],
+        [
+          "T",
+          "S",
+          "R",
+          "E"
+        ],
+        [
+          "I",
+          "M",
+          "T",
+          "R"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 3,
+        "col": 1
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        }
+      ],
+      "easyWords": [
+        "artist",
+        "tree",
+        "elbow",
+        "worm"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 5,
+      "grid": [
+        [
+          "C",
+          "H",
+          "A",
+          "L"
+        ],
+        [
+          "I",
+          "K",
+          "L",
+          "I"
+        ],
+        [
+          "S",
+          "N",
+          "S",
+          "A"
+        ],
+        [
+          "G",
+          "I",
+          "N",
+          "G"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "chalk",
+        "kings",
+        "sings",
+        "sail"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    }
+  ],
+  "5x5": [
+    {
+      "id": 1,
+      "grid": [
+        [
+          "B",
+          "O",
+          "T",
+          "A",
+          "E"
+        ],
+        [
+          "A",
+          "S",
+          "R",
+          "A",
+          "R"
+        ],
+        [
+          "D",
+          "R",
+          "A",
+          "N",
+          "E"
+        ],
+        [
+          "E",
+          "G",
+          "E",
+          "C",
+          "I"
+        ],
+        [
+          "R",
+          "O",
+          "O",
+          "F",
+          "S"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 4
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        }
+      ],
+      "easyWords": [
+        "boards",
+        "stare",
+        "earn",
+        "niece",
+        "eager",
+        "roofs"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 2,
+      "grid": [
+        [
+          "Q",
+          "H",
+          "I",
+          "N",
+          "L"
+        ],
+        [
+          "R",
+          "U",
+          "T",
+          "T",
+          "L"
+        ],
+        [
+          "O",
+          "N",
+          "C",
+          "A",
+          "E"
+        ],
+        [
+          "R",
+          "G",
+          "S",
+          "M",
+          "Y"
+        ],
+        [
+          "O",
+          "U",
+          "P",
+          "K",
+          "O"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 4
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 4
+        }
+      ],
+      "easyWords": [
+        "qui",
+        "intact",
+        "throng",
+        "groups",
+        "smoky",
+        "yell"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 3,
+      "grid": [
+        [
+          "K",
+          "I",
+          "T",
+          "Y",
+          "E"
+        ],
+        [
+          "L",
+          "S",
+          "T",
+          "S",
+          "L"
+        ],
+        [
+          "L",
+          "U",
+          "E",
+          "A",
+          "T"
+        ],
+        [
+          "E",
+          "L",
+          "O",
+          "K",
+          "A"
+        ],
+        [
+          "G",
+          "A",
+          "S",
+          "H",
+          "S"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 4
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 4
+        }
+      ],
+      "easyWords": [
+        "kill",
+        "legal",
+        "least",
+        "tasks",
+        "shouts",
+        "style"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 4,
+      "grid": [
+        [
+          "O",
+          "R",
+          "E",
+          "M",
+          "Y"
+        ],
+        [
+          "F",
+          "D",
+          "R",
+          "A",
+          "E"
+        ],
+        [
+          "S",
+          "F",
+          "A",
+          "L",
+          "L"
+        ],
+        [
+          "I",
+          "M",
+          "E",
+          "Y",
+          "A"
+        ],
+        [
+          "D",
+          "N",
+          "A",
+          "E",
+          "C"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "offend",
+        "dismay",
+        "yard",
+        "dreamy",
+        "yell",
+        "lace"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 5,
+      "grid": [
+        [
+          "H",
+          "A",
+          "R",
+          "M",
+          "I"
+        ],
+        [
+          "D",
+          "A",
+          "I",
+          "M",
+          "D"
+        ],
+        [
+          "Y",
+          "E",
+          "R",
+          "L",
+          "A"
+        ],
+        [
+          "O",
+          "T",
+          "I",
+          "E",
+          "T"
+        ],
+        [
+          "U",
+          "S",
+          "H",
+          "X",
+          "T"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "harm",
+        "mild",
+        "dim",
+        "matter",
+        "ready",
+        "youths",
+        "six"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    }
+  ],
+  "6x6": [
+    {
+      "id": 1,
+      "grid": [
+        [
+          "F",
+          "E",
+          "G",
+          "O",
+          "N",
+          "R"
+        ],
+        [
+          "M",
+          "A",
+          "U",
+          "T",
+          "S",
+          "O"
+        ],
+        [
+          "A",
+          "O",
+          "R",
+          "E",
+          "H",
+          "T"
+        ],
+        [
+          "L",
+          "Y",
+          "P",
+          "D",
+          "A",
+          "R"
+        ],
+        [
+          "E",
+          "A",
+          "P",
+          "I",
+          "R",
+          "W"
+        ],
+        [
+          "S",
+          "S",
+          "R",
+          "E",
+          "K",
+          "O"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 5
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 5
+        }
+      ],
+      "easyWords": [
+        "female",
+        "essay",
+        "youths",
+        "straw",
+        "worker",
+        "ripped",
+        "dragon",
+        "nor"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 2,
+      "grid": [
+        [
+          "Y",
+          "T",
+          "O",
+          "R",
+          "E",
+          "R"
+        ],
+        [
+          "D",
+          "O",
+          "L",
+          "N",
+          "E",
+          "G"
+        ],
+        [
+          "N",
+          "E",
+          "O",
+          "L",
+          "E",
+          "Y"
+        ],
+        [
+          "R",
+          "O",
+          "L",
+          "V",
+          "E",
+          "R"
+        ],
+        [
+          "E",
+          "W",
+          "O",
+          "I",
+          "E",
+          "V"
+        ],
+        [
+          "G",
+          "I",
+          "A",
+          "N",
+          "V",
+          "E"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 1
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 1
+        }
+      ],
+      "easyWords": [
+        "yonder",
+        "region",
+        "naive",
+        "ever",
+        "revolt",
+        "tore",
+        "energy",
+        "yellow"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 3,
+      "grid": [
+        [
+          "P",
+          "A",
+          "E",
+          "R",
+          "N",
+          "I"
+        ],
+        [
+          "S",
+          "C",
+          "C",
+          "E",
+          "E",
+          "G"
+        ],
+        [
+          "I",
+          "H",
+          "E",
+          "T",
+          "N",
+          "T"
+        ],
+        [
+          "U",
+          "T",
+          "O",
+          "S",
+          "T",
+          "A"
+        ],
+        [
+          "O",
+          "R",
+          "E",
+          "A",
+          "S",
+          "E"
+        ],
+        [
+          "Y",
+          "N",
+          "T",
+          "D",
+          "O",
+          "N"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 1,
+        "col": 0
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        }
+      ],
+      "easyWords": [
+        "paces",
+        "sad",
+        "done",
+        "estate",
+        "engine",
+        "erect",
+        "toe",
+        "entry",
+        "youth",
+        "his"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 4,
+      "grid": [
+        [
+          "G",
+          "L",
+          "F",
+          "R",
+          "Y",
+          "I"
+        ],
+        [
+          "S",
+          "O",
+          "E",
+          "T",
+          "G",
+          "N"
+        ],
+        [
+          "Y",
+          "S",
+          "H",
+          "T",
+          "E",
+          "U"
+        ],
+        [
+          "E",
+          "A",
+          "N",
+          "F",
+          "I",
+          "D"
+        ],
+        [
+          "A",
+          "R",
+          "Y",
+          "K",
+          "O",
+          "L"
+        ],
+        [
+          "E",
+          "L",
+          "L",
+          "E",
+          "D",
+          "E"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 2,
+        "col": 4
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        }
+      ],
+      "easyWords": [
+        "glossy",
+        "yer",
+        "really",
+        "yanked",
+        "del",
+        "loft",
+        "theft",
+        "trying",
+        "guide"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 5,
+      "grid": [
+        [
+          "G",
+          "Z",
+          "A",
+          "O",
+          "T",
+          "A"
+        ],
+        [
+          "E",
+          "L",
+          "W",
+          "S",
+          "N",
+          "N"
+        ],
+        [
+          "R",
+          "D",
+          "S",
+          "I",
+          "E",
+          "K"
+        ],
+        [
+          "O",
+          "O",
+          "U",
+          "D",
+          "L",
+          "D"
+        ],
+        [
+          "N",
+          "A",
+          "O",
+          "E",
+          "B",
+          "E"
+        ],
+        [
+          "I",
+          "M",
+          "D",
+          "A",
+          "N",
+          "L"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 5,
+        "col": 2
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        }
+      ],
+      "easyWords": [
+        "glazed",
+        "due",
+        "enable",
+        "eldest",
+        "tank",
+        "know",
+        "wisdom",
+        "minor",
+        "road"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    }
+  ],
+  "7x7": [
+    {
+      "id": 1,
+      "grid": [
+        [
+          "K",
+          "I",
+          "R",
+          "I",
+          "A",
+          "H",
+          "R"
+        ],
+        [
+          "G",
+          "N",
+          "D",
+          "E",
+          "S",
+          "T",
+          "A"
+        ],
+        [
+          "H",
+          "L",
+          "U",
+          "L",
+          "N",
+          "E",
+          "K"
+        ],
+        [
+          "A",
+          "T",
+          "L",
+          "E",
+          "L",
+          "A",
+          "T"
+        ],
+        [
+          "M",
+          "I",
+          "L",
+          "E",
+          "S",
+          "A",
+          "S"
+        ],
+        [
+          "P",
+          "A",
+          "N",
+          "P",
+          "R",
+          "E",
+          "A"
+        ],
+        [
+          "S",
+          "A",
+          "D",
+          "K",
+          "S",
+          "H",
+          "K"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 6,
+        "col": 2
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 2
+        }
+      ],
+      "easyWords": [
+        "knight",
+        "tall",
+        "links",
+        "shakes",
+        "stars",
+        "spells",
+        "snake",
+        "earth",
+        "haired",
+        "duel",
+        "lamps",
+        "sad"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 2,
+      "grid": [
+        [
+          "A",
+          "L",
+          "W",
+          "T",
+          "I",
+          "S",
+          "E"
+        ],
+        [
+          "L",
+          "I",
+          "C",
+          "F",
+          "R",
+          "E",
+          "Y"
+        ],
+        [
+          "I",
+          "E",
+          "E",
+          "A",
+          "E",
+          "D",
+          "E"
+        ],
+        [
+          "E",
+          "X",
+          "P",
+          "R",
+          "C",
+          "H",
+          "Z"
+        ],
+        [
+          "I",
+          "S",
+          "T",
+          "E",
+          "A",
+          "E",
+          "I"
+        ],
+        [
+          "I",
+          "L",
+          "E",
+          "E",
+          "O",
+          "R",
+          "S"
+        ],
+        [
+          "L",
+          "V",
+          "E",
+          "R",
+          "D",
+          "A",
+          "D"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 6,
+        "col": 0
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        }
+      ],
+      "easyWords": [
+        "allies",
+        "steep",
+        "preach",
+        "harder",
+        "roads",
+        "seize",
+        "eyes",
+        "seed",
+        "drift",
+        "twice",
+        "exile",
+        "evil"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 3,
+      "grid": [
+        [
+          "P",
+          "O",
+          "S",
+          "R",
+          "O",
+          "U",
+          "R"
+        ],
+        [
+          "E",
+          "K",
+          "U",
+          "C",
+          "E",
+          "Y",
+          "I"
+        ],
+        [
+          "A",
+          "S",
+          "R",
+          "U",
+          "D",
+          "B",
+          "G"
+        ],
+        [
+          "E",
+          "O",
+          "A",
+          "I",
+          "S",
+          "S",
+          "R"
+        ],
+        [
+          "P",
+          "O",
+          "T",
+          "T",
+          "E",
+          "T",
+          "E"
+        ],
+        [
+          "F",
+          "R",
+          "E",
+          "T",
+          "S",
+          "N",
+          "L"
+        ],
+        [
+          "E",
+          "E",
+          "R",
+          "W",
+          "O",
+          "H",
+          "E"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "peaks",
+        "source",
+        "editor",
+        "rustle",
+        "energy",
+        "your",
+        "ribs",
+        "sets",
+        "shower",
+        "refer",
+        "ropes",
+        "sat"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 4,
+      "grid": [
+        [
+          "H",
+          "M",
+          "E",
+          "R",
+          "A",
+          "K",
+          "I"
+        ],
+        [
+          "A",
+          "M",
+          "U",
+          "S",
+          "C",
+          "D",
+          "N"
+        ],
+        [
+          "S",
+          "R",
+          "O",
+          "D",
+          "R",
+          "A",
+          "L"
+        ],
+        [
+          "E",
+          "O",
+          "E",
+          "E",
+          "V",
+          "N",
+          "Y"
+        ],
+        [
+          "S",
+          "L",
+          "L",
+          "N",
+          "E",
+          "T",
+          "O"
+        ],
+        [
+          "W",
+          "I",
+          "U",
+          "U",
+          "Y",
+          "S",
+          "E"
+        ],
+        [
+          "A",
+          "M",
+          "S",
+          "R",
+          "O",
+          "A",
+          "S"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "hammer",
+        "rack",
+        "kindly",
+        "yards",
+        "sour",
+        "roses",
+        "swam",
+        "mile",
+        "eleven",
+        "note",
+        "essay",
+        "yours",
+        "sun"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 5,
+      "grid": [
+        [
+          "G",
+          "N",
+          "T",
+          "R",
+          "Y",
+          "E",
+          "T"
+        ],
+        [
+          "U",
+          "E",
+          "E",
+          "D",
+          "N",
+          "I",
+          "H"
+        ],
+        [
+          "E",
+          "S",
+          "S",
+          "I",
+          "K",
+          "S",
+          "A"
+        ],
+        [
+          "R",
+          "M",
+          "T",
+          "X",
+          "U",
+          "G",
+          "R"
+        ],
+        [
+          "O",
+          "O",
+          "O",
+          "N",
+          "E",
+          "T",
+          "A"
+        ],
+        [
+          "N",
+          "D",
+          "E",
+          "D",
+          "I",
+          "F",
+          "O"
+        ],
+        [
+          "I",
+          "N",
+          "E",
+          "K",
+          "S",
+          "R",
+          "U"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 5,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "guess",
+        "sermon",
+        "noon",
+        "next",
+        "tide",
+        "entry",
+        "yet",
+        "thinks",
+        "sugar",
+        "raft",
+        "tour",
+        "risked",
+        "dined"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    }
+  ],
+  "8x8": [
+    {
+      "id": 1,
+      "grid": [
+        [
+          "K",
+          "E",
+          "E",
+          "D",
+          "A",
+          "T",
+          "E",
+          "P"
+        ],
+        [
+          "I",
+          "E",
+          "D",
+          "A",
+          "E",
+          "D",
+          "A",
+          "A"
+        ],
+        [
+          "L",
+          "L",
+          "M",
+          "E",
+          "Y",
+          "T",
+          "T",
+          "R"
+        ],
+        [
+          "E",
+          "U",
+          "U",
+          "E",
+          "L",
+          "E",
+          "S",
+          "T"
+        ],
+        [
+          "K",
+          "A",
+          "P",
+          "G",
+          "I",
+          "G",
+          "E",
+          "O"
+        ],
+        [
+          "E",
+          "A",
+          "S",
+          "Y",
+          "N",
+          "R",
+          "P",
+          "I"
+        ],
+        [
+          "T",
+          "S",
+          "M",
+          "E",
+          "D",
+          "I",
+          "P",
+          "C"
+        ],
+        [
+          "L",
+          "A",
+          "E",
+          "L",
+          "I",
+          "T",
+          "E",
+          "R"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 4,
+        "col": 2
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 7
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 7,
+          "col": 7
+        },
+        {
+          "row": 7,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 3
+        },
+        {
+          "row": 7,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        }
+      ],
+      "easyWords": [
+        "killed",
+        "deed",
+        "dated",
+        "depart",
+        "topic",
+        "crept",
+        "tiles",
+        "salt",
+        "teased",
+        "dire",
+        "estate",
+        "eyeing",
+        "gleam",
+        "mug",
+        "gym",
+        "makeup"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 2,
+      "grid": [
+        [
+          "A",
+          "R",
+          "S",
+          "E",
+          "I",
+          "U",
+          "O",
+          "H"
+        ],
+        [
+          "R",
+          "T",
+          "E",
+          "N",
+          "S",
+          "G",
+          "T",
+          "Y"
+        ],
+        [
+          "I",
+          "L",
+          "O",
+          "D",
+          "H",
+          "S",
+          "E",
+          "D"
+        ],
+        [
+          "L",
+          "S",
+          "E",
+          "R",
+          "T",
+          "H",
+          "E",
+          "O"
+        ],
+        [
+          "E",
+          "P",
+          "T",
+          "A",
+          "S",
+          "Y",
+          "H",
+          "M"
+        ],
+        [
+          "O",
+          "O",
+          "W",
+          "P",
+          "T",
+          "C",
+          "A",
+          "R"
+        ],
+        [
+          "T",
+          "H",
+          "M",
+          "I",
+          "A",
+          "S",
+          "E",
+          "D"
+        ],
+        [
+          "H",
+          "U",
+          "S",
+          "N",
+          "N",
+          "D",
+          "S",
+          "E"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 3
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 7,
+          "col": 3
+        },
+        {
+          "row": 7,
+          "col": 2
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 7,
+          "col": 0
+        },
+        {
+          "row": 7,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 7,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 7
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 3
+        }
+      ],
+      "easyWords": [
+        "arrest",
+        "tiles",
+        "slept",
+        "twins",
+        "shoot",
+        "thump",
+        "pardon",
+        "nights",
+        "shy",
+        "yards",
+        "seeds",
+        "snatch",
+        "hem",
+        "modest",
+        "thy",
+        "you",
+        "use"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 3,
+      "grid": [
+        [
+          "K",
+          "I",
+          "O",
+          "R",
+          "S",
+          "E",
+          "A",
+          "A"
+        ],
+        [
+          "K",
+          "S",
+          "N",
+          "F",
+          "U",
+          "L",
+          "G",
+          "T"
+        ],
+        [
+          "O",
+          "O",
+          "D",
+          "T",
+          "O",
+          "T",
+          "B",
+          "I"
+        ],
+        [
+          "L",
+          "A",
+          "C",
+          "Y",
+          "L",
+          "S",
+          "U",
+          "L"
+        ],
+        [
+          "L",
+          "I",
+          "C",
+          "E",
+          "C",
+          "T",
+          "E",
+          "D"
+        ],
+        [
+          "H",
+          "R",
+          "W",
+          "A",
+          "N",
+          "I",
+          "O",
+          "D"
+        ],
+        [
+          "T",
+          "E",
+          "R",
+          "E",
+          "E",
+          "T",
+          "P",
+          "I"
+        ],
+        [
+          "B",
+          "D",
+          "E",
+          "M",
+          "D",
+          "R",
+          "A",
+          "P"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 4
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 0,
+          "col": 7
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 7,
+          "col": 7
+        },
+        {
+          "row": 7,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 7,
+          "col": 3
+        },
+        {
+          "row": 7,
+          "col": 2
+        },
+        {
+          "row": 7,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        }
+      ],
+      "easyWords": [
+        "kinda",
+        "accent",
+        "topics",
+        "subtle",
+        "eat",
+        "tag",
+        "gilded",
+        "dip",
+        "parted",
+        "dew",
+        "warmed",
+        "debt",
+        "thrill",
+        "looks",
+        "softly",
+        "yours"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 4,
+      "grid": [
+        [
+          "W",
+          "U",
+          "L",
+          "L",
+          "O",
+          "U",
+          "O",
+          "N"
+        ],
+        [
+          "A",
+          "I",
+          "D",
+          "R",
+          "A",
+          "N",
+          "U",
+          "E"
+        ],
+        [
+          "L",
+          "D",
+          "T",
+          "H",
+          "A",
+          "G",
+          "G",
+          "E"
+        ],
+        [
+          "E",
+          "E",
+          "P",
+          "P",
+          "S",
+          "C",
+          "H",
+          "M"
+        ],
+        [
+          "A",
+          "N",
+          "E",
+          "R",
+          "O",
+          "E",
+          "U",
+          "I"
+        ],
+        [
+          "G",
+          "G",
+          "R",
+          "R",
+          "U",
+          "R",
+          "N",
+          "D"
+        ],
+        [
+          "V",
+          "E",
+          "E",
+          "E",
+          "S",
+          "L",
+          "U",
+          "N"
+        ],
+        [
+          "N",
+          "O",
+          "G",
+          "R",
+          "U",
+          "E",
+          "T",
+          "E"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 7,
+        "col": 0
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 0,
+          "col": 7
+        },
+        {
+          "row": 0,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 7,
+          "col": 2
+        },
+        {
+          "row": 7,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 0
+        }
+      ],
+      "easyWords": [
+        "wailed",
+        "depth",
+        "hard",
+        "dull",
+        "lounge",
+        "enough",
+        "hem",
+        "minute",
+        "endure",
+        "escape",
+        "engage",
+        "error",
+        "rules",
+        "sure",
+        "ego",
+        "oven"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    },
+    {
+      "id": 5,
+      "grid": [
+        [
+          "E",
+          "G",
+          "S",
+          "A",
+          "Y",
+          "S",
+          "W",
+          "E"
+        ],
+        [
+          "E",
+          "S",
+          "G",
+          "A",
+          "L",
+          "U",
+          "O",
+          "H"
+        ],
+        [
+          "R",
+          "D",
+          "N",
+          "Z",
+          "L",
+          "T",
+          "P",
+          "X"
+        ],
+        [
+          "I",
+          "E",
+          "S",
+          "E",
+          "E",
+          "I",
+          "E",
+          "E"
+        ],
+        [
+          "N",
+          "L",
+          "O",
+          "H",
+          "C",
+          "N",
+          "S",
+          "R"
+        ],
+        [
+          "G",
+          "B",
+          "O",
+          "O",
+          "I",
+          "I",
+          "N",
+          "O"
+        ],
+        [
+          "E",
+          "V",
+          "Y",
+          "A",
+          "N",
+          "E",
+          "O",
+          "W"
+        ],
+        [
+          "N",
+          "E",
+          "L",
+          "L",
+          "O",
+          "V",
+          "L",
+          "S"
+        ]
+      ],
+      "start": {
+        "row": 0,
+        "col": 0
+      },
+      "end": {
+        "row": 0,
+        "col": 6
+      },
+      "easyPath": [
+        {
+          "row": 0,
+          "col": 0
+        },
+        {
+          "row": 0,
+          "col": 1
+        },
+        {
+          "row": 1,
+          "col": 2
+        },
+        {
+          "row": 1,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 3
+        },
+        {
+          "row": 3,
+          "col": 3
+        },
+        {
+          "row": 2,
+          "col": 2
+        },
+        {
+          "row": 2,
+          "col": 1
+        },
+        {
+          "row": 3,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 0
+        },
+        {
+          "row": 5,
+          "col": 0
+        },
+        {
+          "row": 4,
+          "col": 1
+        },
+        {
+          "row": 5,
+          "col": 2
+        },
+        {
+          "row": 5,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 0
+        },
+        {
+          "row": 7,
+          "col": 0
+        },
+        {
+          "row": 6,
+          "col": 1
+        },
+        {
+          "row": 6,
+          "col": 2
+        },
+        {
+          "row": 7,
+          "col": 1
+        },
+        {
+          "row": 7,
+          "col": 2
+        },
+        {
+          "row": 7,
+          "col": 3
+        },
+        {
+          "row": 6,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 4
+        },
+        {
+          "row": 6,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 4
+        },
+        {
+          "row": 7,
+          "col": 5
+        },
+        {
+          "row": 6,
+          "col": 5
+        },
+        {
+          "row": 7,
+          "col": 6
+        },
+        {
+          "row": 7,
+          "col": 7
+        },
+        {
+          "row": 6,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 7
+        },
+        {
+          "row": 4,
+          "col": 7
+        },
+        {
+          "row": 5,
+          "col": 6
+        },
+        {
+          "row": 6,
+          "col": 6
+        },
+        {
+          "row": 5,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 6
+        },
+        {
+          "row": 3,
+          "col": 7
+        },
+        {
+          "row": 2,
+          "col": 7
+        },
+        {
+          "row": 1,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 5
+        },
+        {
+          "row": 4,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 3
+        },
+        {
+          "row": 5,
+          "col": 3
+        },
+        {
+          "row": 4,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 2
+        },
+        {
+          "row": 3,
+          "col": 1
+        },
+        {
+          "row": 2,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 0
+        },
+        {
+          "row": 1,
+          "col": 1
+        },
+        {
+          "row": 0,
+          "col": 2
+        },
+        {
+          "row": 0,
+          "col": 3
+        },
+        {
+          "row": 0,
+          "col": 4
+        },
+        {
+          "row": 0,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 5
+        },
+        {
+          "row": 1,
+          "col": 4
+        },
+        {
+          "row": 2,
+          "col": 4
+        },
+        {
+          "row": 3,
+          "col": 4
+        },
+        {
+          "row": 4,
+          "col": 5
+        },
+        {
+          "row": 3,
+          "col": 6
+        },
+        {
+          "row": 2,
+          "col": 6
+        },
+        {
+          "row": 1,
+          "col": 7
+        },
+        {
+          "row": 0,
+          "col": 7
+        },
+        {
+          "row": 0,
+          "col": 6
+        }
+      ],
+      "easyWords": [
+        "egg",
+        "gaze",
+        "ending",
+        "globe",
+        "envy",
+        "yell",
+        "lain",
+        "novels",
+        "sworn",
+        "noise",
+        "exotic",
+        "choose",
+        "ere",
+        "essays",
+        "sullen",
+        "nephew"
+      ],
+      "optimalPath": null,
+      "optimalWords": null,
+      "goldMoves": null
+    }
+  ]
+}

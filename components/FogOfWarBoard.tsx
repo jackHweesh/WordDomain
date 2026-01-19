@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { Coordinate } from '../core/types';
 import Tile from './Tile';
+import { Colors } from '../src/styles/theme';
 
-interface BoardProps {
+interface FogOfWarBoardProps {
   grid: string[][];
   start: Coordinate;
   end: Coordinate;
@@ -14,9 +15,22 @@ interface BoardProps {
   glowingHintTiles?: Set<string>; // Tiles that are currently glowing green
   onTilePress: (coord: Coordinate) => void;
   animationTrigger?: { coord: Coordinate; type: 'select' | 'unselect' | 'invalid' } | null;
+  fogMap: boolean[][]; // 2D array: true = hidden, false = visible
 }
 
-export default function Board({ grid, start, end, selection, usedTiles, fadingTiles, hintedTiles, glowingHintTiles, onTilePress, animationTrigger }: BoardProps) {
+export default function FogOfWarBoard({ 
+  grid, 
+  start, 
+  end, 
+  selection, 
+  usedTiles, 
+  fadingTiles,
+  hintedTiles,
+  glowingHintTiles,
+  onTilePress, 
+  animationTrigger,
+  fogMap
+}: FogOfWarBoardProps) {
   const isSelected = (coord: Coordinate): boolean => {
     return selection.some(sel => sel.row === coord.row && sel.col === coord.col);
   };
@@ -86,9 +100,27 @@ export default function Board({ grid, start, end, selection, usedTiles, fadingTi
 
   const gridSize = grid[0].length;
   const screenWidth = Dimensions.get('window').width;
-  const tileSize = Math.floor((screenWidth - 40) / gridSize) - 4; // 40 for padding, 4 for gaps
+  const tileSize = Math.floor((screenWidth - 40) / gridSize) - 4; // Match Board calculation
+  
+  // Fog size is 140% of tile size to ensure seamless coverage with no visible edges
+  // Larger overlap eliminates any gaps or seams between adjacent fog overlays
+  const fogSize = Math.floor(tileSize * 1.4);
+  // Center fog on tile: offset = (fogSize - tileSize) / 2
+  const fogOffset = (fogSize - tileSize) / 2;
 
-  // Create subtle wood grain texture lines
+  // Check if a tile should be fogged using fogMap
+  const isFogged = (row: number, col: number): boolean => {
+    // Safety check - if fogMap is empty or invalid, don't fog anything
+    if (!fogMap || !fogMap[row] || fogMap[row][col] === undefined) {
+      return false;
+    }
+    
+    // Use fogMap: true = hidden/fogged, false = visible
+    // All tiles (including start and end) follow the same visibility rules
+    return fogMap[row][col] === true;
+  };
+
+  // Create subtle wood grain texture lines (matching Board)
   const woodGrainLines = Array.from({ length: 12 }, (_, i) => (
     <View key={i} style={[styles.woodGrainLine, { top: `${i * 8.33}%` }]} />
   ));
@@ -119,46 +151,64 @@ export default function Board({ grid, start, end, selection, usedTiles, fadingTi
         {/* Tiles grid */}
         <View style={styles.tilesContainer}>
           {grid.map((row, rowIndex) => (
-        <View key={rowIndex} style={styles.row}>
-          {row.map((letter, colIndex) => {
-          const coord = { row: rowIndex, col: colIndex };
-            const tileKey = `${rowIndex},${colIndex}`;
-            const isUsed = usedTiles && usedTiles.has(tileKey);
-            const isFading = fadingTiles && fadingTiles.has(tileKey);
-            const isCurrentStart = coord.row === start.row && coord.col === start.col;
-            
-            // Hide used tiles unless they're the current start tile or currently fading
-            if (isUsed && !isCurrentStart && !isFading) {
-              return (
-                <View key={`${rowIndex}-${colIndex}`} style={{ width: tileSize, height: tileSize, margin: 2 }} />
-              );
-            }
-            
-          const getAnimationTrigger = (): 'select' | 'unselect' | 'invalid' | null => {
-            if (animationTrigger && 
-                animationTrigger.coord.row === coord.row && 
-                animationTrigger.coord.col === coord.col) {
-              return animationTrigger.type;
-            }
-            return null;
-          };
+            <View key={rowIndex} style={styles.row}>
+              {row.map((letter, colIndex) => {
+                const coord = { row: rowIndex, col: colIndex };
+                const tileKey = `${rowIndex},${colIndex}`;
+                const isUsed = usedTiles && usedTiles.has(tileKey);
+                const isFading = fadingTiles && fadingTiles.has(tileKey);
+                const isCurrentStart = coord.row === start.row && coord.col === start.col;
+                const fogged = isFogged(rowIndex, colIndex);
+                
+                const getAnimationTrigger = (): 'select' | 'unselect' | 'invalid' | null => {
+                  if (animationTrigger && 
+                      animationTrigger.coord.row === coord.row && 
+                      animationTrigger.coord.col === coord.col) {
+                    return animationTrigger.type;
+                  }
+                  return null;
+                };
 
-          return (
-            <Tile
-              key={`${rowIndex}-${colIndex}`}
-              letter={letter}
-              coord={coord}
-              type={getTileType(coord)}
-              disabled={isDisabled(coord)}
-              onPress={() => onTilePress(coord)}
-              size={tileSize}
-              animationTrigger={getAnimationTrigger()}
-              isFading={isFading || false}
-            />
-          );
-          })}
-        </View>
-      ))}
+                // Always use the same wrapper structure for consistent fog positioning
+                // This ensures fog overlay position doesn't shift when tiles become used
+                return (
+                  <View 
+                    key={`${rowIndex}-${colIndex}`} 
+                    style={styles.tileWrapper}
+                  >
+                    {/* Tile component - only render if not used (or is current start or fading) */}
+                    {(!isUsed || isCurrentStart || isFading) ? (
+                      <Tile
+                        letter={letter}
+                        coord={coord}
+                        type={getTileType(coord)}
+                        disabled={isDisabled(coord) || fogged} // Block presses when fogged
+                        onPress={() => {
+                          if (!fogged) {
+                            onTilePress(coord);
+                          }
+                        }}
+                        size={tileSize}
+                        animationTrigger={getAnimationTrigger()}
+                        isFading={isFading || false}
+                      />
+                    ) : (
+                      // Empty space placeholder when tile is used - matches Classic mode
+                      <View style={{ width: tileSize, height: tileSize, margin: 2 }} />
+                    )}
+                    
+                    {/* Fog overlay - render based on fogMap, regardless of tile presence */}
+                    {/* Always positioned relative to the same wrapper container */}
+                    <FogOverlay 
+                      fogged={fogged}
+                      fogSize={fogSize}
+                      fogOffset={fogOffset}
+                    />
+                  </View>
+                );
+              })}
+            </View>
+          ))}
         </View>
       </View>
     </View>
@@ -262,4 +312,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     position: 'relative',
   },
+  tileWrapper: {
+    position: 'relative',
+    // No margin here - Tile component already has margin: 2
+    // This prevents double margins that cause layout shifts
+    // Container must maintain consistent dimensions for fog overlay positioning
+    // Fog overlay is absolutely positioned relative to this container
+  },
+  fogOverlay: {
+    position: 'absolute',
+    backgroundColor: 'rgba(184, 184, 184, 1.0)', // Colors.fogGrey fully opaque
+    borderRadius: 0, // Square with no rounded corners
+    zIndex: 1000, // Above the tile
+    // No shadow, no borders - completely flat for uniform appearance
+  },
 });
+
+// Simple fog overlay component - no animation for performance
+interface FogOverlayProps {
+  fogged: boolean;
+  fogSize: number;
+  fogOffset: number;
+}
+
+function FogOverlay({ fogged, fogSize, fogOffset }: FogOverlayProps) {
+  // Don't render if not fogged - simple and fast
+  if (!fogged) {
+    return null;
+  }
+
+  return (
+    <View
+      style={[
+        styles.fogOverlay,
+        {
+          width: fogSize,
+          height: fogSize,
+          top: -fogOffset,
+          left: -fogOffset,
+        }
+      ]}
+      pointerEvents="none"
+    />
+  );
+}

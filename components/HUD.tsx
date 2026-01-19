@@ -48,11 +48,6 @@ export default function HUD({
   return (
     <View style={styles.container}>
       <View style={styles.statusSection}>
-        {status === 'won' && (
-          <Text style={styles.wonText}>
-            🎉 {getMedalEmoji()} {getMedalText()} 🎉
-          </Text>
-        )}
         {status === 'invalid' && (
           <Text style={styles.invalidText}>❌ Invalid word - try again!</Text>
         )}

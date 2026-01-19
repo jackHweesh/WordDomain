@@ -12,18 +12,19 @@ import {
   Animated,
 } from 'react-native';
 const screenWidth = Dimensions.get('window').width;
-import { generatePuzzle } from '../core/puzzleGenerator';
-import { solveOptimal } from '../core/puzzleSolver';
+import { generateBlackoutPuzzle } from '../core/blackoutPuzzleGenerator';
 import { isValidWord, getMinWordLength } from '../core/wordValidator';
 import { loadBigDictionary } from '../core/dictionaryLoader';
 import { Coordinate, PuzzleData } from '../core/types';
 import Board from '../components/Board';
-import HUD from '../components/HUD';
-import { getPuzzle, getPuzzleCount, getCategories } from '../services/puzzleLoader';
-import { Category, saveMedal, unlockNextPuzzle } from '../services/progressStorage';
+import { getCategories } from '../services/puzzleLoader';
+import { Category } from '../services/progressStorage';
+import { getBlackoutPuzzleCount } from '../services/blackoutPuzzleCache';
+import { saveTrophy, unlockNextPuzzle } from '../services/blackoutProgressStorage';
+import { getBlackoutPuzzle } from '../services/blackoutPuzzleCache';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
-import MedalIcon from '../components/MedalIcon';
+import TrophyIcon from '../components/TrophyIcon';
 import PathVisualization from '../components/PathVisualization';
 import Confetti from '../components/Confetti';
 import { Colors, Spacing, Fonts, Radius, Shadows } from '../src/styles/theme';
@@ -36,12 +37,11 @@ interface GameState {
   selection: Coordinate[];
   playedWords: Array<{ word: string; path: Coordinate[] }>;
   status: 'playing' | 'won' | 'invalid';
-  goldMoves: number;
-  medal?: 'gold' | 'silver' | 'bronze';
   usedTiles: Set<string>;
+  totalTiles: number; // Total tiles in the grid
 }
 
-interface PuzzleScreenProps {
+interface BlackoutPuzzleScreenProps {
   category?: Category;
   puzzleId?: number;
   onBack?: () => void;
@@ -57,13 +57,14 @@ const CATEGORY_TITLES: { [key in Category]: string } = {
   '8x8': '8×8',
 };
 
-export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzle, onBackToHome }: PuzzleScreenProps) {
+export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSelectPuzzle, onBackToHome }: BlackoutPuzzleScreenProps) {
   const [puzzle, setPuzzle] = useState<PuzzleData | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
   const [gridSize, setGridSize] = useState(6);
-  const [showSolutions, setShowSolutions] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showHints, setShowHints] = useState(false);
+  const [showFailureModal, setShowFailureModal] = useState(false);
   const [showSizeDropdown, setShowSizeDropdown] = useState(false);
   const [isCustomMode, setIsCustomMode] = useState(!category || !puzzleId);
   const [showWinModal, setShowWinModal] = useState(false);
@@ -71,17 +72,20 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   const [fadingTiles, setFadingTiles] = useState<Set<string>>(new Set());
   const [hintedTiles, setHintedTiles] = useState<Set<string>>(new Set());
   const [glowingHintTiles, setGlowingHintTiles] = useState<Set<string>>(new Set()); // Tiles that are currently glowing green
-  // Common Hint (easy path) tracking
+  // Classic Hint (progressive word reveal) tracking
+  const [classicHintCount, setClassicHintCount] = useState(0);
+  // Solve Puzzle Hint (all words at once) tracking
+  const [solvePuzzleHintUsed, setSolvePuzzleHintUsed] = useState(false);
+  // Legacy hint tracking (kept for compatibility but not used in Blackout)
   const [commonHintCount, setCommonHintCount] = useState(0);
   const [commonHintedWordIndices, setCommonHintedWordIndices] = useState<Set<number>>(new Set());
   const [commonHintedWordIndicesAtWin, setCommonHintedWordIndicesAtWin] = useState<Set<number>>(new Set());
-  const [commonHintUsedWordIndices, setCommonHintUsedWordIndices] = useState<Set<number>>(new Set()); // Track which common hint words were actually used
+  const [commonHintUsedWordIndices, setCommonHintUsedWordIndices] = useState<Set<number>>(new Set());
   const [commonHintUsedWordIndicesAtWin, setCommonHintUsedWordIndicesAtWin] = useState<Set<number>>(new Set());
-  // Gold Hint (optimal path) tracking
   const [goldHintCount, setGoldHintCount] = useState(0);
   const [goldHintedWordIndices, setGoldHintedWordIndices] = useState<Set<number>>(new Set());
   const [goldHintedWordIndicesAtWin, setGoldHintedWordIndicesAtWin] = useState<Set<number>>(new Set());
-  const [goldHintUsedWordIndices, setGoldHintUsedWordIndices] = useState<Set<number>>(new Set()); // Track which gold hint words were actually used
+  const [goldHintUsedWordIndices, setGoldHintUsedWordIndices] = useState<Set<number>>(new Set());
   const [goldHintUsedWordIndicesAtWin, setGoldHintUsedWordIndicesAtWin] = useState<Set<number>>(new Set());
   const winModalOpacity = useRef(new Animated.Value(0)).current;
   const winCardScale = useRef(new Animated.Value(0.9)).current;
@@ -93,28 +97,12 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       let newPuzzle: PuzzleData;
       
       if (category && puzzleId) {
-        const loadedPuzzle = await getPuzzle(category, puzzleId);
-        if (!loadedPuzzle) {
-          throw new Error(`Failed to load puzzle ${category}-${puzzleId}`);
-        }
-        newPuzzle = loadedPuzzle;
-        
-        if (!newPuzzle.optimalWords || !newPuzzle.optimalPath || !newPuzzle.goldMoves) {
-          console.warn(`Puzzle ${category}-${puzzleId} missing optimal solution, computing...`);
-          const { optimalWords, optimalPath, goldMoves } = await solveOptimal(newPuzzle);
-          newPuzzle.optimalWords = optimalWords;
-          newPuzzle.optimalPath = optimalPath;
-          newPuzzle.goldMoves = goldMoves;
-        }
+        newPuzzle = await getBlackoutPuzzle(category, puzzleId);
       } else {
-        newPuzzle = await generatePuzzle(Math.floor(Math.random() * 1000) + 1, gridSize);
-        const { optimalWords, optimalPath, goldMoves } = await solveOptimal(newPuzzle);
-        
-        newPuzzle.optimalWords = optimalWords;
-        newPuzzle.optimalPath = optimalPath;
-        newPuzzle.goldMoves = goldMoves;
+        newPuzzle = await generateBlackoutPuzzle(Math.floor(Math.random() * 1000) + 1, gridSize);
       }
 
+      const totalTiles = newPuzzle.grid.length * newPuzzle.grid[0].length;
       const workingGrid = newPuzzle.grid.map(row => [...row]);
       const initialState: GameState = {
         grid: workingGrid,
@@ -122,8 +110,8 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
         selection: [newPuzzle.start],
         playedWords: [],
         status: 'playing',
-        goldMoves: newPuzzle.goldMoves || 0,
         usedTiles: new Set<string>(),
+        totalTiles,
       };
       
       setPuzzle(newPuzzle);
@@ -132,6 +120,8 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       // Reset hints
       setHintedTiles(new Set());
       setGlowingHintTiles(new Set());
+      setClassicHintCount(0);
+      setSolvePuzzleHintUsed(false);
       setCommonHintCount(0);
       setCommonHintedWordIndices(new Set());
       setCommonHintedWordIndicesAtWin(new Set());
@@ -159,11 +149,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     initializeGame();
   }, [initializeGame]);
 
-  // Preload big dictionary on mount to eliminate first word check delay
+  // Preload big dictionary on mount
   useEffect(() => {
     loadBigDictionary().catch(error => {
       console.error('Error preloading dictionary:', error);
-      // Non-blocking - if it fails, it will load on first word check
     });
   }, []);
 
@@ -177,27 +166,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     if (!gameState || !puzzle) return '';
     return gameState.selection.map(coord => gameState.grid[coord.row][coord.col]).join('').toLowerCase();
   }, [gameState, puzzle]);
-
-  // Helper function to get hint path text
-  const getHintPathText = useCallback((): string[] => {
-    const paths: string[] = [];
-    
-    if (puzzle && commonHintCount > 0 && puzzle.easyWords) {
-      const revealedWords = puzzle.easyWords.slice(0, commonHintCount);
-      if (revealedWords.length > 0) {
-        paths.push(`Common Path: ${revealedWords.join(' --> ')}`);
-      }
-    }
-    
-    if (puzzle && goldHintCount > 0 && puzzle.optimalWords) {
-      const revealedWords = puzzle.optimalWords.slice(0, goldHintCount);
-      if (revealedWords.length > 0) {
-        paths.push(`Gold Path: ${revealedWords.join(' --> ')}`);
-      }
-    }
-    
-    return paths;
-  }, [puzzle, commonHintCount, goldHintCount]);
 
   const handleTilePress = useCallback((coord: Coordinate) => {
     if (!gameState || !puzzle) return;
@@ -263,6 +231,294 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     setTileAnimationTrigger({ coord, type: 'select' });
     setTimeout(() => setTileAnimationTrigger(null), 200);
   }, [gameState, puzzle, isAdjacent8]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!gameState || !puzzle) return;
+    if (gameState.selection.length < getMinWordLength()) return;
+    
+    const word = gameState.selection.map(tile => 
+      gameState.grid[tile.row][tile.col]
+    ).join("");
+    
+    const valid = await isValidWord(word);
+    
+    if (valid) {
+      // Play puzzle interaction sound when valid word disappears
+      audioManager.playSound(SoundCategory.PUZZLE);
+      
+      const newPlayedWord = {
+        word: word.toLowerCase(),
+        path: [...gameState.selection],
+      };
+      
+      // Check if this word matches any hinted words (Classic Hint or Solve Puzzle)
+      const newCommonHintUsedWordIndices = new Set(commonHintUsedWordIndices);
+      if (puzzle.easyWords && puzzle.easyPath) {
+        // Check Classic Hint: all words from 0 to classicHintCount-1
+        for (let wordIndex = 0; wordIndex < classicHintCount; wordIndex++) {
+          if (wordIndex < puzzle.easyWords.length) {
+            const hintWord = puzzle.easyWords[wordIndex];
+            const hintPath = getWordPathForIndex(puzzle.easyWords, puzzle.easyPath, wordIndex);
+            if (checkWordMatchesHint(newPlayedWord, hintWord, hintPath)) {
+              newCommonHintUsedWordIndices.add(wordIndex);
+            }
+          }
+        }
+        // Check Solve Puzzle: all words if solvePuzzleHintUsed is true
+        if (solvePuzzleHintUsed) {
+          for (let wordIndex = 0; wordIndex < puzzle.easyWords.length; wordIndex++) {
+            const hintWord = puzzle.easyWords[wordIndex];
+            const hintPath = getWordPathForIndex(puzzle.easyWords, puzzle.easyPath, wordIndex);
+            if (checkWordMatchesHint(newPlayedWord, hintWord, hintPath)) {
+              newCommonHintUsedWordIndices.add(wordIndex);
+            }
+          }
+        }
+      }
+      setCommonHintUsedWordIndices(newCommonHintUsedWordIndices);
+      
+      const lastTile = gameState.selection[gameState.selection.length - 1];
+      
+      // Mark tiles to fade out (all except the last one)
+      const tilesToFade = new Set<string>();
+      gameState.selection.forEach(tile => {
+        const tileKey = `${tile.row},${tile.col}`;
+        if (tile.row !== lastTile.row || tile.col !== lastTile.col) {
+          tilesToFade.add(tileKey);
+        }
+      });
+      setFadingTiles(tilesToFade);
+      
+      // After fade animation completes, update gameState
+      setTimeout(() => {
+        const newUsedTiles = new Set(gameState.usedTiles);
+        tilesToFade.forEach(tileKey => {
+          newUsedTiles.add(tileKey);
+        });
+        
+        // Remove hinted tiles that were used
+        const newHintedTiles = new Set(hintedTiles);
+        tilesToFade.forEach(tileKey => {
+          newHintedTiles.delete(tileKey);
+        });
+        setHintedTiles(newHintedTiles);
+        
+        const newStart = { row: lastTile.row, col: lastTile.col };
+        
+        // Blackout win condition: reached END AND all tiles used
+        const reachedEnd = lastTile.row === puzzle.end.row && lastTile.col === puzzle.end.col;
+        const allTilesUsed = newUsedTiles.size === gameState.totalTiles - 1; // -1 because end tile is not in usedTiles
+        const isWon = reachedEnd && allTilesUsed;
+        const isFailure = reachedEnd && !allTilesUsed; // Reached END but not all tiles used
+        
+        setGameState({
+          ...gameState,
+          currentStart: newStart,
+          selection: [newStart],
+          playedWords: [...gameState.playedWords, newPlayedWord],
+          status: isWon ? 'won' : isFailure ? 'invalid' : 'playing',
+          usedTiles: newUsedTiles,
+          totalTiles: gameState.totalTiles,
+        });
+        
+        // Clear fading tiles
+        setFadingTiles(new Set());
+        
+        if (isWon && category && puzzleId) {
+          saveTrophy(category, puzzleId);
+          unlockNextPuzzle(category, puzzleId);
+        }
+        
+        if (isWon) {
+          // Build the set of hinted word indices for Blackout mode
+          const allHintedIndices = new Set<number>();
+          if (puzzle.easyWords) {
+            if (solvePuzzleHintUsed) {
+              for (let i = 0; i < puzzle.easyWords.length; i++) allHintedIndices.add(i);
+            } else {
+              for (let i = 0; i < classicHintCount; i++) allHintedIndices.add(i);
+            }
+          }
+          setCommonHintedWordIndicesAtWin(allHintedIndices);
+          setGoldHintedWordIndicesAtWin(new Set());
+          
+          // Calculate which hinted words were actually used by checking ALL played words
+          // Do this here to ensure we have the complete final solution
+          const finalPlayedWords = [...gameState.playedWords, newPlayedWord];
+          const finalCommonHintUsedWordIndices = new Set<number>();
+          
+          // Check each played word against all hinted words (Classic Hint and Solve Puzzle)
+          finalPlayedWords.forEach((playedWord) => {
+            if (puzzle.easyWords && puzzle.easyPath) {
+              // Check Classic Hint: all words from 0 to classicHintCount-1
+              for (let wordIndex = 0; wordIndex < classicHintCount; wordIndex++) {
+                if (wordIndex < puzzle.easyWords.length) {
+                  const hintWord = puzzle.easyWords[wordIndex];
+                  const hintPath = getWordPathForIndex(puzzle.easyWords, puzzle.easyPath, wordIndex);
+                  if (checkWordMatchesHint(playedWord, hintWord, hintPath)) {
+                    finalCommonHintUsedWordIndices.add(wordIndex);
+                  }
+                }
+              }
+              // Check Solve Puzzle: all words if solvePuzzleHintUsed is true
+              if (solvePuzzleHintUsed) {
+                for (let wordIndex = 0; wordIndex < puzzle.easyWords.length; wordIndex++) {
+                  const hintWord = puzzle.easyWords[wordIndex];
+                  const hintPath = getWordPathForIndex(puzzle.easyWords, puzzle.easyPath, wordIndex);
+                  if (checkWordMatchesHint(playedWord, hintWord, hintPath)) {
+                    finalCommonHintUsedWordIndices.add(wordIndex);
+                  }
+                }
+              }
+            }
+          });
+          
+          // Preserve the calculated used hint word indices
+          // Use simplified calculation with allHintedIndices we built above
+          // CRITICAL: This must process ALL hinted indices, not just the first one
+          const calculateHintMatches = (hintedIndices: Set<number>, hintWords: string[] | null | undefined, hintPath: Coordinate[] | null | undefined): Set<number> => {
+            const matchedIndices = new Set<number>();
+            if (!hintWords || !hintPath) return matchedIndices;
+            
+            // Convert Set to Array to ensure explicit iteration through ALL elements
+            const hintedIndicesArray = Array.from(hintedIndices);
+            
+            // For each hinted word index - process ALL of them
+            for (const wordIndex of hintedIndicesArray) {
+              if (wordIndex >= hintWords.length) continue;
+              const hintWord = hintWords[wordIndex];
+              const hintPathForWord = getWordPathForIndex(hintWords, hintPath, wordIndex);
+              
+              // Check if any played word matches this hint word and path exactly
+              // Process ALL played words to find the match
+              for (const playedWord of finalPlayedWords) {
+                if (checkWordMatchesHint(playedWord, hintWord, hintPathForWord)) {
+                  matchedIndices.add(wordIndex);
+                  break; // Found a match for this wordIndex, move to next wordIndex
+                }
+              }
+            }
+            return matchedIndices;
+          };
+          const commonHintMatches = calculateHintMatches(allHintedIndices, puzzle.easyWords, puzzle.easyPath);
+          setCommonHintUsedWordIndicesAtWin(commonHintMatches);
+          setGoldHintUsedWordIndicesAtWin(new Set());
+          
+          // Reset hints when puzzle is completed
+          setHintedTiles(new Set());
+          setGlowingHintTiles(new Set());
+          setClassicHintCount(0);
+          setSolvePuzzleHintUsed(false);
+          setCommonHintCount(0);
+          setCommonHintedWordIndices(new Set());
+          setCommonHintUsedWordIndices(new Set());
+          setGoldHintCount(0);
+          setGoldHintedWordIndices(new Set());
+          setGoldHintUsedWordIndices(new Set());
+          
+          // Play celebration sound when win modal appears
+          audioManager.playSound(SoundCategory.CELEBRATION);
+          
+          // Show win modal with animation
+          setShowWinModal(true);
+          Animated.parallel([
+            Animated.timing(winModalOpacity, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.parallel([
+              Animated.spring(winCardScale, {
+                toValue: 1,
+                tension: 50,
+                friction: 7,
+                useNativeDriver: true,
+              }),
+              Animated.timing(winCardOpacity, {
+                toValue: 1,
+                duration: 250,
+                useNativeDriver: true,
+              }),
+            ]),
+          ]).start();
+        } else if (isFailure) {
+          // Show failure modal
+          setShowFailureModal(true);
+        }
+      }, 300); // Fade duration
+    } else {
+      // Play deny sound for invalid word
+      audioManager.playSound(SoundCategory.DENY);
+      
+      const workingGrid = puzzle.grid.map(row => [...row]);
+      setGameState({
+        ...gameState,
+        grid: workingGrid,
+        currentStart: puzzle.start,
+        selection: [puzzle.start],
+        playedWords: [],
+        status: 'invalid',
+        usedTiles: new Set<string>(),
+        totalTiles: gameState.totalTiles,
+      });
+      // Don't reset hints on invalid word - only clear visible tiles
+      setHintedTiles(new Set());
+      setGlowingHintTiles(new Set());
+    }
+  }, [gameState, puzzle, category, puzzleId, hintedTiles]);
+
+  // Helper function to check if playedWords match easyWords in order
+  const checkWordsMatchEasyPath = useCallback((playedWords: Array<{ word: string; path: Coordinate[] }>, easyWords: string[]): boolean => {
+    if (playedWords.length === 0) return true; // No words played yet, consider it matching
+    if (playedWords.length > easyWords.length) return false; // Too many words
+    
+    // Check if each played word matches the corresponding easy word
+    for (let i = 0; i < playedWords.length; i++) {
+      if (playedWords[i].word.toLowerCase() !== easyWords[i].toLowerCase()) {
+        return false;
+      }
+    }
+    return true;
+  }, []);
+
+  // Helper function to get ordered coordinates for the first N words from easyWords
+  // This matches the exact logic from placeWordsOnPath in puzzleGenerator.ts
+  const getWordCoordinatesOrdered = useCallback((words: string[], path: Coordinate[], wordCount: number): string[] => {
+    const orderedCoords: string[] = [];
+    if (!words || !path || wordCount === 0) return orderedCoords;
+    
+    let pathIndex = 0;
+    const wordsToHint = words.slice(0, wordCount);
+    const seenCoords = new Set<string>();
+    
+    for (let wordIndex = 0; wordIndex < wordsToHint.length; wordIndex++) {
+      const word = wordsToHint[wordIndex];
+      const isFirst = wordIndex === 0;
+      
+      // Place letters of the word (matches placeWordsOnPath logic exactly)
+      for (let letterIndex = 0; letterIndex < word.length; letterIndex++) {
+        if (pathIndex >= path.length) break;
+        
+        const coord = path[pathIndex];
+        const tileKey = `${coord.row},${coord.col}`;
+        
+        // Add coordinate to ordered list only if not already seen (handle overlaps)
+        if (!seenCoords.has(tileKey)) {
+          orderedCoords.push(tileKey);
+          seenCoords.add(tileKey);
+        }
+        
+        // Skip first letter of subsequent words (overlap) - matches placeWordsOnPath
+        if (!isFirst && letterIndex === 0) {
+          // Letter already placed by previous word, pathIndex stays the same
+        } else {
+          pathIndex++;
+        }
+      }
+    }
+    
+    return orderedCoords;
+  }, []);
 
   // Helper function to get the path coordinates for a specific word index
   // FIXED: Walks the combined path word by word and detects overlap duplication automatically
@@ -344,246 +600,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     return true;
   }, []);
 
-  const handleSubmit = useCallback(async () => {
-    if (!gameState || !puzzle) return;
-    if (gameState.selection.length < getMinWordLength()) return;
-    
-    const word = gameState.selection.map(tile => 
-      gameState.grid[tile.row][tile.col]
-    ).join("");
-    
-    const valid = await isValidWord(word);
-    
-    if (valid) {
-      // Play puzzle interaction sound when valid word disappears
-      audioManager.playSound(SoundCategory.PUZZLE);
-      
-      const newPlayedWord = {
-        word: word.toLowerCase(),
-        path: [...gameState.selection],
-      };
-      
-      const lastTile = gameState.selection[gameState.selection.length - 1];
-      
-      // Check if this word matches any common hint words
-      const newCommonHintUsedWordIndices = new Set(commonHintUsedWordIndices);
-      if (puzzle.easyWords && puzzle.easyPath) {
-        // Check all hinted words from 0 to commonHintCount-1
-        for (let wordIndex = 0; wordIndex < commonHintCount; wordIndex++) {
-          if (wordIndex < puzzle.easyWords.length) {
-            // Get the path for this word
-            const hintWord = puzzle.easyWords[wordIndex];
-            const hintPath = getWordPathForIndex(puzzle.easyWords, puzzle.easyPath, wordIndex);
-            if (checkWordMatchesHint(newPlayedWord, hintWord, hintPath)) {
-              newCommonHintUsedWordIndices.add(wordIndex);
-            }
-          }
-        }
-      }
-      
-      // Check if this word matches any gold hint words
-      const newGoldHintUsedWordIndices = new Set(goldHintUsedWordIndices);
-      if (puzzle.optimalWords && puzzle.optimalPath) {
-        // Check all hinted words from 0 to goldHintCount-1
-        for (let wordIndex = 0; wordIndex < goldHintCount; wordIndex++) {
-          if (wordIndex < puzzle.optimalWords.length) {
-            // Get the path for this word
-            const hintWord = puzzle.optimalWords[wordIndex];
-            const hintPath = getWordPathForIndex(puzzle.optimalWords, puzzle.optimalPath, wordIndex);
-            if (checkWordMatchesHint(newPlayedWord, hintWord, hintPath)) {
-              newGoldHintUsedWordIndices.add(wordIndex);
-            }
-          }
-        }
-      }
-      
-      setCommonHintUsedWordIndices(newCommonHintUsedWordIndices);
-      setGoldHintUsedWordIndices(newGoldHintUsedWordIndices);
-      
-      // Mark tiles to fade out (all except the last one)
-      const tilesToFade = new Set<string>();
-      gameState.selection.forEach(tile => {
-        const tileKey = `${tile.row},${tile.col}`;
-        if (tile.row !== lastTile.row || tile.col !== lastTile.col) {
-          tilesToFade.add(tileKey);
-        }
-      });
-      setFadingTiles(tilesToFade);
-      
-      // After fade animation completes, update gameState
-      setTimeout(() => {
-        const newUsedTiles = new Set(gameState.usedTiles);
-        tilesToFade.forEach(tileKey => {
-          newUsedTiles.add(tileKey);
-        });
-        
-        // Remove hinted tiles that were used
-        const newHintedTiles = new Set(hintedTiles);
-        tilesToFade.forEach(tileKey => {
-          newHintedTiles.delete(tileKey);
-        });
-        setHintedTiles(newHintedTiles);
-        
-        const newStart = { row: lastTile.row, col: lastTile.col };
-        const isWon = lastTile.row === puzzle.end.row && lastTile.col === puzzle.end.col;
-        
-        let medal: 'gold' | 'silver' | 'bronze' | undefined;
-        if (isWon) {
-          const playedCount = gameState.playedWords.length + 1;
-          if (playedCount === gameState.goldMoves) {
-            medal = 'gold';
-          } else if (playedCount === gameState.goldMoves + 1) {
-            medal = 'silver';
-          } else {
-            medal = 'bronze';
-          }
-          
-          if (category && puzzleId && medal) {
-            saveMedal(category, puzzleId, medal);
-            unlockNextPuzzle(category, puzzleId);
-          }
-        }
-        
-        setGameState({
-          ...gameState,
-          currentStart: newStart,
-          selection: [newStart],
-          playedWords: [...gameState.playedWords, newPlayedWord],
-          status: isWon ? 'won' : 'playing',
-          medal,
-          usedTiles: newUsedTiles,
-        });
-        
-        // Clear fading tiles
-        setFadingTiles(new Set());
-        
-        if (isWon) {
-          // SIMPLIFIED HINT TRACKING: Calculate which hinted words were actually used
-          // This is the single source of truth for the emoji grid visualization
-          const finalPlayedWords = [...gameState.playedWords, newPlayedWord];
-          
-          // For each word index that was hinted, check if any played word matches it exactly
-          // CRITICAL: This must process ALL hinted indices, not just the first one
-          const calculateHintMatches = (
-            hintedIndices: Set<number>,
-            hintWords: string[] | null | undefined,
-            hintPath: Coordinate[] | null | undefined
-          ): Set<number> => {
-            const matchedIndices = new Set<number>();
-            if (!hintWords || !hintPath) return matchedIndices;
-            
-            // Convert Set to Array to ensure explicit iteration through ALL elements
-            const hintedIndicesArray = Array.from(hintedIndices);
-            
-            // For each hinted word index - process ALL of them
-            for (const wordIndex of hintedIndicesArray) {
-              if (wordIndex >= hintWords.length) continue;
-              
-              const hintWord = hintWords[wordIndex];
-              const hintPathForWord = getWordPathForIndex(hintWords, hintPath, wordIndex);
-              
-              // Check if any played word matches this hint word and path exactly
-              // Process ALL played words to find the match
-              for (const playedWord of finalPlayedWords) {
-                if (checkWordMatchesHint(playedWord, hintWord, hintPathForWord)) {
-                  matchedIndices.add(wordIndex);
-                  break; // Found a match for this wordIndex, move to next wordIndex
-                }
-              }
-            }
-            return matchedIndices;
-          };
-          
-          // Calculate matches for both hint types
-          const commonHintMatches = calculateHintMatches(
-            commonHintedWordIndices,
-            puzzle.easyWords,
-            puzzle.easyPath
-          );
-          const goldHintMatches = calculateHintMatches(
-            goldHintedWordIndices,
-            puzzle.optimalWords,
-            puzzle.optimalPath
-          );
-          
-          // Store for visualization
-          setCommonHintedWordIndicesAtWin(new Set(commonHintedWordIndices));
-          setGoldHintedWordIndicesAtWin(new Set(goldHintedWordIndices));
-          setCommonHintUsedWordIndicesAtWin(commonHintMatches);
-          setGoldHintUsedWordIndicesAtWin(goldHintMatches);
-          
-          // Reset hints when puzzle is completed
-          setHintedTiles(new Set());
-          setCommonHintCount(0);
-          setCommonHintedWordIndices(new Set());
-          setCommonHintUsedWordIndices(new Set());
-          setGoldHintCount(0);
-          setGoldHintedWordIndices(new Set());
-          setGoldHintUsedWordIndices(new Set());
-          
-          // Play celebration sound when win modal appears
-          audioManager.playSound(SoundCategory.CELEBRATION);
-          
-          // Show win modal with animation
-          setShowWinModal(true);
-          Animated.parallel([
-            Animated.timing(winModalOpacity, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            Animated.parallel([
-              Animated.spring(winCardScale, {
-                toValue: 1,
-                tension: 50,
-                friction: 7,
-                useNativeDriver: true,
-              }),
-              Animated.timing(winCardOpacity, {
-                toValue: 1,
-                duration: 250,
-                useNativeDriver: true,
-              }),
-            ]),
-          ]).start();
-        }
-      }, 300); // Fade duration
-      
-    } else {
-      // Play deny sound for invalid word
-      audioManager.playSound(SoundCategory.DENY);
-      
-      const workingGrid = puzzle.grid.map(row => [...row]);
-      setGameState({
-        ...gameState,
-        grid: workingGrid,
-        currentStart: puzzle.start,
-        selection: [puzzle.start],
-        playedWords: [],
-        status: 'invalid',
-        usedTiles: new Set<string>(),
-      });
-      // Don't reset hints on invalid word - only clear visible tiles
-      setHintedTiles(new Set());
-    }
-  }, [gameState, puzzle, category, puzzleId, hintedTiles, commonHintedWordIndices, goldHintedWordIndices, commonHintUsedWordIndices, goldHintUsedWordIndices, getWordPathForIndex, checkWordMatchesHint]);
-
-  // Helper function to check if playedWords match easyWords in order
-  const checkWordsMatchEasyPath = useCallback((playedWords: Array<{ word: string; path: Coordinate[] }>, easyWords: string[]): boolean => {
-    if (playedWords.length === 0) return true; // No words played yet, consider it matching
-    if (playedWords.length > easyWords.length) return false; // Too many words
-    
-    // Check if each played word matches the corresponding easy word
-    for (let i = 0; i < playedWords.length; i++) {
-      if (playedWords[i].word.toLowerCase() !== easyWords[i].toLowerCase()) {
-        return false;
-      }
-    }
-    return true;
-  }, []);
-
   // Helper function to get coordinates for a specific word index from a path
-  // Returns the coordinates that make up just that one word
   const getWordCoordinates = useCallback((words: string[], path: Coordinate[], wordIndex: number): string[] => {
     const coords: string[] = [];
     if (!words || !path || wordIndex < 0 || wordIndex >= words.length) return coords;
@@ -628,7 +645,27 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     return coords;
   }, []);
 
-  const handleCommonHint = useCallback(() => {
+  // Helper function to get hint path text for display
+  const getHintPathText = useCallback((): string[] => {
+    const paths: string[] = [];
+    
+    if (puzzle && puzzle.easyWords) {
+      if (classicHintCount > 0) {
+        const revealedWords = puzzle.easyWords.slice(0, classicHintCount);
+        if (revealedWords.length > 0) {
+          paths.push(`Classic Hint: ${revealedWords.join(' --> ')}`);
+        }
+      }
+      
+      if (solvePuzzleHintUsed && puzzle.easyWords.length > 0) {
+        paths.push(`Solve Puzzle: ${puzzle.easyWords.join(' --> ')}`);
+      }
+    }
+    
+    return paths;
+  }, [puzzle, classicHintCount, solvePuzzleHintUsed]);
+
+  const handleClassicHint = useCallback(() => {
     if (!puzzle || !puzzle.easyWords || !puzzle.easyPath) return;
     
     // Always reset puzzle to start when hint is used
@@ -641,11 +678,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       playedWords: [],
       status: 'playing',
       usedTiles: new Set<string>(),
-      medal: undefined,
     } : null);
     
     // Get the next word index to reveal
-    const nextWordIndex = commonHintCount;
+    const nextWordIndex = classicHintCount;
     if (nextWordIndex >= puzzle.easyWords.length) return; // All words already revealed
     
     // Mark this word index as hinted
@@ -656,94 +692,12 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     });
     
     // Increment hint count
-    setCommonHintCount(prev => prev + 1);
+    setClassicHintCount(prev => prev + 1);
     
-    // Get coordinates for ALL common hint words revealed so far (including the new one)
-    const allCommonRevealedCoords: string[] = [];
-    for (let i = 0; i <= nextWordIndex; i++) {
-      const wordCoords = getWordCoordinates(puzzle.easyWords, puzzle.easyPath, i);
-      wordCoords.forEach(coord => {
-        if (!allCommonRevealedCoords.includes(coord)) {
-          allCommonRevealedCoords.push(coord);
-        }
-      });
-    }
-    
-    // Get coordinates for ONLY the new word being revealed (for animation)
-    const newWordCoords = getWordCoordinates(puzzle.easyWords, puzzle.easyPath, nextWordIndex);
-    
-    // Get all previously revealed common hint words (excluding the new one)
-    const previouslyRevealedCommonCoords = allCommonRevealedCoords.filter(coord => !newWordCoords.includes(coord));
-    
-    // Also preserve any gold hint tiles that were already revealed
-    const currentHintedTiles = new Set(hintedTiles);
-    previouslyRevealedCommonCoords.forEach(coord => currentHintedTiles.add(coord));
-    setHintedTiles(currentHintedTiles);
-    
-    // Then animate ONLY the new word appearing one tile at a time
-    const animationDuration = newWordCoords.length * 500; // Total animation time
-    newWordCoords.forEach((tileKey, index) => {
-      setTimeout(() => {
-        setHintedTiles(prev => {
-          const updated = new Set(prev);
-          updated.add(tileKey);
-          return updated;
-        });
-        setGlowingHintTiles(prev => {
-          const updated = new Set(prev);
-          updated.add(tileKey);
-          return updated;
-        });
-      }, index * 500); // 500ms delay between each tile
-    });
-    
-    // After animation completes + 2 seconds, remove green glow
-    setTimeout(() => {
-      setGlowingHintTiles(prev => {
-        const updated = new Set(prev);
-        newWordCoords.forEach(tileKey => updated.delete(tileKey));
-        return updated;
-      });
-    }, animationDuration + 2000); // 2 seconds after animation completes
-    
-    // Close the modal
-    setShowSolutions(false);
-  }, [puzzle, commonHintCount, getWordCoordinates]);
-
-  const handleGoldHint = useCallback(() => {
-    if (!puzzle || !puzzle.optimalWords || !puzzle.optimalPath) return;
-    
-    // Always reset puzzle to start when hint is used
-    const workingGrid = puzzle.grid.map(row => [...row]);
-    setGameState(prev => prev ? {
-      ...prev,
-      grid: workingGrid,
-      currentStart: puzzle.start,
-      selection: [puzzle.start],
-      playedWords: [],
-      status: 'playing',
-      usedTiles: new Set<string>(),
-      medal: undefined,
-    } : null);
-    
-    // Get the next word index to reveal
-    const nextWordIndex = goldHintCount;
-    if (nextWordIndex >= puzzle.optimalWords.length) return; // All words already revealed
-    
-    // Mark this word index as hinted
-    setGoldHintedWordIndices(prev => {
-      const updated = new Set(prev);
-      updated.add(nextWordIndex);
-      return updated;
-    });
-    
-    // Increment hint count
-    setGoldHintCount(prev => prev + 1);
-    
-    // Get coordinates for ALL words revealed so far (including the new one)
+    // Get coordinates for ALL classic hint words revealed so far (including the new one)
     const allRevealedCoords: string[] = [];
     for (let i = 0; i <= nextWordIndex; i++) {
-      const wordCoords = getWordCoordinates(puzzle.optimalWords, puzzle.optimalPath, i);
+      const wordCoords = getWordCoordinates(puzzle.easyWords, puzzle.easyPath, i);
       wordCoords.forEach(coord => {
         if (!allRevealedCoords.includes(coord)) {
           allRevealedCoords.push(coord);
@@ -752,11 +706,12 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     }
     
     // Get coordinates for ONLY the new word being revealed (for animation)
-    const newWordCoords = getWordCoordinates(puzzle.optimalWords, puzzle.optimalPath, nextWordIndex);
+    const newWordCoords = getWordCoordinates(puzzle.easyWords, puzzle.easyPath, nextWordIndex);
     
-    // First, show all previously revealed words immediately (without animation)
-    // Also include any common hint tiles that were already revealed
+    // Get all previously revealed words (excluding the new one)
     const previouslyRevealedCoords = allRevealedCoords.filter(coord => !newWordCoords.includes(coord));
+    
+    // Also preserve any solve puzzle hint tiles that were already revealed
     const currentHintedTiles = new Set(hintedTiles);
     previouslyRevealedCoords.forEach(coord => currentHintedTiles.add(coord));
     setHintedTiles(currentHintedTiles);
@@ -788,8 +743,76 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     }, animationDuration + 2000); // 2 seconds after animation completes
     
     // Close the modal
-    setShowSolutions(false);
-  }, [puzzle, goldHintCount, getWordCoordinates, hintedTiles]);
+    setShowHints(false);
+  }, [puzzle, classicHintCount, getWordCoordinates, hintedTiles]);
+
+  const handleSolvePuzzleHint = useCallback(() => {
+    if (!puzzle || !puzzle.easyWords || !puzzle.easyPath) return;
+    
+    // Always reset puzzle to start when hint is used
+    const workingGrid = puzzle.grid.map(row => [...row]);
+    setGameState(prev => prev ? {
+      ...prev,
+      grid: workingGrid,
+      currentStart: puzzle.start,
+      selection: [puzzle.start],
+      playedWords: [],
+      status: 'playing',
+      usedTiles: new Set<string>(),
+    } : null);
+    
+    // Mark solve puzzle hint as used
+    setSolvePuzzleHintUsed(true);
+    
+    // Mark all word indices as hinted for Solve Puzzle
+    setCommonHintedWordIndices(prev => {
+      const updated = new Set(prev);
+      for (let i = 0; i < puzzle.easyWords.length; i++) {
+        updated.add(i);
+      }
+      return updated;
+    });
+    
+    // Get coordinates for ALL words in the solution
+    const allCoords: string[] = [];
+    for (let i = 0; i < puzzle.easyWords.length; i++) {
+      const wordCoords = getWordCoordinates(puzzle.easyWords, puzzle.easyPath, i);
+      wordCoords.forEach(coord => {
+        if (!allCoords.includes(coord)) {
+          allCoords.push(coord);
+        }
+      });
+    }
+    
+    // Animate all tiles appearing one at a time (same pace as other hints)
+    const animationDuration = allCoords.length * 500; // Total animation time
+    allCoords.forEach((tileKey, index) => {
+      setTimeout(() => {
+        setHintedTiles(prev => {
+          const updated = new Set(prev);
+          updated.add(tileKey);
+          return updated;
+        });
+        setGlowingHintTiles(prev => {
+          const updated = new Set(prev);
+          updated.add(tileKey);
+          return updated;
+        });
+      }, index * 500); // 500ms delay between each tile
+    });
+    
+    // After animation completes + 2 seconds, remove green glow
+    setTimeout(() => {
+      setGlowingHintTiles(prev => {
+        const updated = new Set(prev);
+        allCoords.forEach(tileKey => updated.delete(tileKey));
+        return updated;
+      });
+    }, animationDuration + 2000); // 2 seconds after animation completes
+    
+    // Close the modal
+    setShowHints(false);
+  }, [puzzle, getWordCoordinates]);
 
   const handleRestart = useCallback(() => {
     if (!gameState || !puzzle) return;
@@ -803,11 +826,12 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       playedWords: [],
       status: 'playing',
       usedTiles: new Set<string>(),
-      medal: undefined,
+      totalTiles: gameState.totalTiles,
     });
     setShowWinModal(false);
     // Don't reset hints - keep hint count and clear visible tiles
     setHintedTiles(new Set());
+    setGlowingHintTiles(new Set());
     // Reset animations
     winModalOpacity.setValue(0);
     winCardScale.setValue(0.9);
@@ -821,7 +845,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     const currentCategoryIndex = categories.indexOf(category);
     
     // Get total puzzles in current category
-    const currentCategoryCount = await getPuzzleCount(category);
+    const currentCategoryCount = await getBlackoutPuzzleCount(category);
     
     // If there's a next puzzle in the same category
     if (puzzleId < currentCategoryCount) {
@@ -854,7 +878,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     if (nextPuzzle && onSelectPuzzle) {
       onSelectPuzzle(nextPuzzle.category, nextPuzzle.puzzleId);
     } else if (onBack) {
-      // Fallback to going back if navigation not available
       onBack();
     }
   }, [isCustomMode, initializeGame, getNextPuzzle, onSelectPuzzle, onBack, winModalOpacity, winCardScale, winCardOpacity]);
@@ -867,7 +890,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     if (onBackToHome) {
       onBackToHome();
     } else if (onBack) {
-      // Fallback to onBack if onBackToHome not provided
       onBack();
     }
   }, [onBack, onBackToHome, winModalOpacity, winCardScale, winCardOpacity]);
@@ -891,7 +913,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   }
 
   if (!puzzle || !gameState) {
-    // Show loading instead of error to prevent flash
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerContainer}>
@@ -901,6 +922,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
       </SafeAreaView>
     );
   }
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -935,7 +957,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           <View style={styles.headerRight}>
             <TouchableOpacity 
               style={styles.headerIconButton}
-              onPress={() => setShowSolutions(true)}
+              onPress={() => {
+                audioManager.playSound(SoundCategory.UI);
+                setShowHints(true);
+              }}
               activeOpacity={0.7}
             >
               <Text style={styles.iconText}>💡</Text>
@@ -950,7 +975,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           </View>
         </View>
 
-        {/* Grid - DO NOT MODIFY */}
+        {/* Grid */}
         <View style={styles.boardContainer}>
           <Board
             grid={gameState.grid}
@@ -992,30 +1017,38 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           </Text>
         </View>
 
-        {/* Hint Paths Display */}
+        {/* Hint Paths Display - Scrollable */}
         {getHintPathText().length > 0 && (
           <View style={styles.hintPathsContainer}>
-            {getHintPathText().map((pathText, index) => (
-              <Text key={index} style={styles.hintPathText}>
-                {pathText}
-              </Text>
-            ))}
+            <ScrollView 
+              style={styles.hintPathsScrollView}
+              contentContainerStyle={styles.hintPathsScrollContent}
+              showsVerticalScrollIndicator={true}
+            >
+              {getHintPathText().map((pathText, index) => (
+                <Text key={index} style={styles.hintPathText}>
+                  {pathText}
+                </Text>
+              ))}
+            </ScrollView>
           </View>
         )}
 
-        {/* HUD for win status */}
-        <HUD
-          currentWord={getCurrentWord()}
-          goldMoves={gameState.goldMoves}
-          playedCount={gameState.playedWords.length}
-          status={gameState.status}
-          medal={gameState.medal}
-        />
+        {/* Status Message */}
+        {gameState.status === 'invalid' && (
+          <View style={styles.statusContainer}>
+            <Text style={styles.invalidText}>❌ Invalid word - try again!</Text>
+          </View>
+        )}
+        {gameState.status === 'won' && (
+          <View style={styles.statusContainer}>
+            <Text style={styles.wonText}>🏆 Blackout Achieved!</Text>
+          </View>
+        )}
       </View>
 
-      {/* Confetti - render outside modal so it starts immediately */}
-      {showWinModal && gameState.medal === 'gold' && <Confetti color="gold" />}
-      {showWinModal && gameState.medal === 'silver' && <Confetti color="silver" />}
+      {/* Gold confetti for Blackout completion - render outside modal so it starts immediately */}
+      {showWinModal && <Confetti color="gold" />}
 
       {/* Win Modal */}
       {showWinModal && (
@@ -1034,7 +1067,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
               },
             ]}
           >
-            <Text style={styles.winTitle}>Puzzle Complete!</Text>
+            <Text style={styles.winTitle}>Blackout Complete!</Text>
             
             <TouchableOpacity
               style={styles.winCloseButton}
@@ -1049,15 +1082,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
               <Text style={styles.winCloseButtonText}>✕</Text>
             </TouchableOpacity>
             
-            {/* Medal Indicator */}
-            {gameState.medal && (
-              <View style={styles.medalContainer}>
-                <MedalIcon type={gameState.medal} size={32} />
-                <Text style={styles.medalText}>
-                  {gameState.medal.toUpperCase()} MEDAL
-                </Text>
-              </View>
-            )}
+            {/* Trophy Indicator */}
+            <View style={styles.trophyContainer}>
+              <TrophyIcon size={64} />
+            </View>
 
             {/* Path Visualization */}
             <View style={styles.pathVisualizationContainer}>
@@ -1080,7 +1108,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             {/* Stats Summary */}
             <View style={styles.statsContainer}>
               <Text style={styles.statText}>
-                Moves: {gameState.playedWords.length}
+                Words: {gameState.playedWords.length}
               </Text>
               {gameState.playedWords.length > 0 && (
                 <Text style={styles.pathText}>
@@ -1111,43 +1139,6 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
           </Animated.View>
         </Animated.View>
       )}
-
-      {/* Hints Modal */}
-      <Modal
-        visible={showSolutions}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowSolutions(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>💡 Get a Hint</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowSolutions(false)}
-              >
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.hintOptionsContainer}>
-              <PrimaryButton
-                title="Common Hint"
-                onPress={handleCommonHint}
-                style={styles.hintButton}
-                disabled={!puzzle?.easyWords || commonHintCount >= (puzzle?.easyWords?.length || 0)}
-              />
-              <PrimaryButton
-                title="Gold Hint"
-                onPress={handleGoldHint}
-                style={styles.hintButton}
-                disabled={!puzzle?.optimalWords || goldHintCount >= (puzzle?.optimalWords?.length || 0)}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Size Selector Modal (Custom Mode Only) */}
       {isCustomMode && (
@@ -1198,6 +1189,71 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
         </Modal>
       )}
 
+      {/* Hints Modal */}
+      <Modal
+        visible={showHints}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowHints(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>💡 Get a Hint</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowHints(false)}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.hintOptionsContainer}>
+              <PrimaryButton
+                title="Classic Hint"
+                onPress={handleClassicHint}
+                style={styles.hintButton}
+                disabled={!puzzle?.easyWords || classicHintCount >= (puzzle?.easyWords?.length || 0)}
+              />
+              <PrimaryButton
+                title="Solve Puzzle"
+                onPress={handleSolvePuzzleHint}
+                style={styles.hintButton}
+                disabled={!puzzle?.easyWords || solvePuzzleHintUsed}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Failure Modal */}
+      <Modal
+        visible={showFailureModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowFailureModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.failureCard}>
+            <Text style={styles.failureTitle}>❌ Not Complete</Text>
+            <Text style={styles.failureText}>
+              You reached the END tile, but you haven't used all tiles on the board!
+            </Text>
+            <Text style={styles.failureSubtext}>
+              Try again and make sure to use every single tile.
+            </Text>
+            <PrimaryButton
+              title="Try Again"
+              onPress={() => {
+                setShowFailureModal(false);
+                handleRestart();
+              }}
+              style={styles.failureButton}
+            />
+          </View>
+        </View>
+      </Modal>
+
       {/* Instructions Modal */}
       <Modal
         visible={showInstructions}
@@ -1208,7 +1264,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>How to Play</Text>
+              <Text style={styles.modalTitle}>How to Play - Blackout</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowInstructions(false)}
@@ -1223,7 +1279,8 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
                 <Text style={styles.instruction}>• Tap adjacent tiles (including diagonals) to form words</Text>
                 <Text style={styles.instruction}>• No tile reuse within the same word</Text>
                 <Text style={styles.instruction}>• Submit valid words (3+ letters) to clear tiles and advance</Text>
-                <Text style={styles.instruction}>• Reach the END tile (gold) to win!</Text>
+                <Text style={styles.instruction}>• Use EVERY tile on the board!</Text>
+                <Text style={styles.instruction}>• Reach the END tile with all tiles used to achieve Blackout!</Text>
               </View>
             </ScrollView>
           </View>
@@ -1233,6 +1290,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   );
 }
 
+// Styles - similar to PuzzleScreen but adjusted for Blackout
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -1251,36 +1309,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     ...Fonts.body,
-    color: Colors.textPrimary,
-  },
-  loadingSubtext: {
-    marginTop: Spacing.xs,
-    ...Fonts.small,
     color: Colors.textSecondary,
-  },
-  errorText: {
-    ...Fonts.subtitle,
-    color: Colors.danger,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
-  },
-  errorSubtext: {
-    ...Fonts.small,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: Colors.accent,
-    padding: Spacing.md,
-    borderRadius: 8,
-    minWidth: 100,
-  },
-  retryButtonText: {
-    ...Fonts.body,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    textAlign: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -1299,26 +1328,21 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 32,
-    color: Colors.surfaceDark,
+    color: Colors.textPrimary,
     fontWeight: '300',
   },
   headerTitleContainer: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   headerTitle: {
-    ...Fonts.subtitle,
+    ...Fonts.title,
     fontSize: 18,
-    fontWeight: '700',
     color: Colors.textPrimary,
-    textAlign: 'center',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    width: 88, // 40 + gap + 40 for two icons
   },
   headerIconButton: {
     width: 40,
@@ -1328,12 +1352,25 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 24,
-    color: Colors.surfaceDark,
   },
   boardContainer: {
     width: '100%',
     alignItems: 'center',
     marginBottom: Spacing.md,
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
+    width: '100%',
+  },
+  restartButton: {
+    flex: 1,
+  },
+  submitButton: {
+    flex: 2,
   },
   currentWordContainer: {
     alignSelf: 'center',
@@ -1357,129 +1394,81 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
   },
-  hintPathsContainer: {
-    alignSelf: 'flex-start',
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
-    width: '100%',
-  },
-  hintPathText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    textAlign: 'left',
-    marginBottom: Spacing.xs,
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.md,
-    gap: Spacing.md,
-    width: '100%',
-  },
-  restartButton: {
-    flex: 1,
-  },
-  submitButton: {
-    flex: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: Colors.background,
-    borderRadius: 16,
-    width: Dimensions.get('window').width * 0.9,
-    maxHeight: Dimensions.get('window').height * 0.8,
-    padding: Spacing.lg,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.tileBorder,
-    paddingBottom: Spacing.md,
-  },
-  modalTitle: {
-    ...Fonts.subtitle,
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.tileBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  modalScrollView: {
-    maxHeight: Dimensions.get('window').height * 0.6,
-  },
-  hintOptionsContainer: {
-    padding: Spacing.xl,
-    gap: Spacing.md,
-  },
-  hintButton: {
-    width: '100%',
-  },
   solutionSection: {
-    marginBottom: Spacing.lg,
-    padding: Spacing.md,
-    backgroundColor: Colors.tileBackground,
-    borderRadius: 8,
+    marginBottom: Spacing.xl,
   },
   solutionTitle: {
-    ...Fonts.subtitle,
+    ...Fonts.title,
     fontSize: 18,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
     color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
   },
   solutionSubtitle: {
-    ...Fonts.small,
+    ...Fonts.body,
+    fontSize: 14,
     color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   wordList: {
-    marginBottom: Spacing.sm,
+    marginTop: Spacing.sm,
   },
   wordItem: {
     ...Fonts.body,
-    marginBottom: Spacing.xs,
+    fontSize: 16,
     color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    paddingLeft: Spacing.sm,
   },
   wordBold: {
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  goldMoves: {
-    ...Fonts.body,
-    fontWeight: '700',
+    fontWeight: '600',
     color: Colors.accent,
-    marginTop: Spacing.sm,
   },
-  instructionsSection: {
-    padding: Spacing.md,
+  failureCard: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    width: screenWidth * 0.85,
+    maxWidth: 400,
+    ...Shadows.soft,
+    alignItems: 'center',
   },
-  instruction: {
+  failureTitle: {
+    ...Fonts.title,
+    fontSize: 24,
+    color: '#A85D3A',
+    marginBottom: Spacing.md,
+  },
+  failureText: {
     ...Fonts.body,
-    marginBottom: Spacing.sm,
+    fontSize: 16,
     color: Colors.textPrimary,
-    lineHeight: 24,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  failureSubtext: {
+    ...Fonts.body,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  failureButton: {
+    width: '100%',
+  },
+  statusContainer: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  invalidText: {
+    fontSize: 14,
+    color: '#A85D3A',
+    fontWeight: 'bold',
+  },
+  wonText: {
+    fontSize: 16,
+    color: '#8B6F47',
+    fontWeight: 'bold',
   },
   winModalOverlay: {
     position: 'absolute',
@@ -1488,20 +1477,27 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 9999,
     elevation: 9999,
   },
   winCard: {
-    backgroundColor: Colors.surface,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: Colors.background,
     borderRadius: Radius.lg,
-    width: '80%',
-    alignItems: 'center',
+    padding: Spacing.xl,
+    width: screenWidth * 0.85,
+    maxWidth: 400,
     ...Shadows.soft,
+    alignItems: 'center',
     position: 'relative',
+    zIndex: 10000,
+  },
+  winTitle: {
+    ...Fonts.title,
+    fontSize: 24,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
   winCloseButton: {
     position: 'absolute',
@@ -1518,100 +1514,149 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: '400',
   },
-  winTitle: {
-    ...Fonts.title,
-    fontSize: 28,
-    color: Colors.textPrimary,
+  trophyContainer: {
+    alignItems: 'center',
     marginBottom: Spacing.md,
-    textAlign: 'center',
   },
   pathVisualizationContainer: {
-    width: 132,
-    height: 132,
-    marginBottom: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginVertical: Spacing.md,
   },
   statsContainer: {
-    width: '100%',
     alignItems: 'center',
     marginBottom: Spacing.md,
   },
   statText: {
-    fontSize: 16,
-    color: Colors.textSecondary,
+    ...Fonts.body,
+    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   pathText: {
-    fontSize: 14,
+    ...Fonts.small,
     color: Colors.textSecondary,
-    fontStyle: 'italic',
-    marginTop: Spacing.xs,
     textAlign: 'center',
-  },
-  medalContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-    gap: Spacing.sm,
-  },
-  medalText: {
-    ...Fonts.body,
-    fontWeight: '700',
-    color: Colors.textPrimary,
+    marginTop: Spacing.xs,
   },
   winButtonsContainer: {
     width: '100%',
-    marginTop: Spacing.md,
+    gap: Spacing.sm,
   },
   winPrimaryButton: {
     width: '100%',
-    marginBottom: Spacing.sm,
   },
   winSecondaryButton: {
     width: '100%',
-    marginBottom: Spacing.sm,
   },
   backToDomainButton: {
-    paddingVertical: Spacing.sm,
+    padding: Spacing.md,
     alignItems: 'center',
   },
   backToDomainText: {
-    ...Fonts.small,
-    color: Colors.textSecondary,
+    ...Fonts.body,
+    color: Colors.accent,
+    textDecorationLine: 'underline',
   },
-  sizeSelectorModal: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    width: '80%',
-    maxWidth: 300,
-    ...Shadows.soft,
-  },
-  sizeOptionsContainer: {
-    marginTop: Spacing.md,
-    gap: Spacing.sm,
-  },
-  sizeOption: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.tileBackground,
-    borderWidth: 2,
-    borderColor: 'transparent',
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  sizeOptionSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: Colors.surface,
+  modalContent: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.lg,
+    width: screenWidth * 0.85,
+    maxWidth: 400,
+    maxHeight: '80%',
+    ...Shadows.soft,
   },
-  sizeOptionText: {
-    ...Fonts.subtitle,
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.tileBorder,
+  },
+  modalTitle: {
+    ...Fonts.title,
     fontSize: 20,
     color: Colors.textPrimary,
   },
-  sizeOptionTextSelected: {
+  closeButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: Colors.textSecondary,
+  },
+  modalScrollView: {
+    padding: Spacing.md,
+  },
+  hintOptionsContainer: {
+    padding: Spacing.xl,
+    gap: Spacing.md,
+  },
+  hintButton: {
+    width: '100%',
+  },
+  instructionsSection: {
+    gap: Spacing.sm,
+  },
+  instruction: {
+    ...Fonts.body,
     color: Colors.textPrimary,
+    lineHeight: 24,
+  },
+  sizeSelectorModal: {
+    backgroundColor: Colors.background,
+    borderRadius: Radius.lg,
+    width: screenWidth * 0.7,
+    ...Shadows.soft,
+  },
+  sizeOptionsContainer: {
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  sizeOption: {
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.tileBackground,
+    alignItems: 'center',
+  },
+  sizeOptionSelected: {
+    backgroundColor: Colors.accent,
+  },
+  sizeOptionText: {
+    ...Fonts.title,
+    fontSize: 18,
+    color: Colors.textPrimary,
+  },
+  sizeOptionTextSelected: {
+    color: Colors.background,
+  },
+  hintPathsContainer: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    width: '100%',
+    maxHeight: 150, // Limit height to allow scrolling when needed
+  },
+  hintPathsScrollView: {
+    maxHeight: 150,
+  },
+  hintPathsScrollContent: {
+    paddingBottom: Spacing.xs,
+  },
+  hintPathText: {
+    fontSize: 18,
     fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'left',
+    marginBottom: Spacing.xs,
   },
 });
+
