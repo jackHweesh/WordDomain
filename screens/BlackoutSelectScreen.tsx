@@ -15,6 +15,7 @@ import { getBlackoutPuzzleCount } from '../services/blackoutPuzzleCache';
 import Card from '../components/Card';
 import PillBadge from '../components/PillBadge';
 import WordDomainLogo from '../components/WordDomainLogo';
+import DiceIcon from '../components/DiceIcon';
 import { Colors, Spacing, Radius, Fonts } from '../src/styles/theme';
 import { audioManager } from '../services/audioManager';
 import { SoundCategory } from '../services/audioManager';
@@ -34,7 +35,7 @@ const CATEGORY_SUBTITLES: { [key in Category]: string } = {
   '5x5': 'Classic Domain',
   '6x6': 'Grand Domain',
   '7x7': 'Master Domain',
-  '8x8': 'Legend Domain',
+  '8x8': 'Legendary Domain',
 };
 
 export default function BlackoutSelectScreen({ onSelectCategory, onGenerateCustom, onBack }: BlackoutSelectScreenProps) {
@@ -204,7 +205,9 @@ export default function BlackoutSelectScreen({ onSelectCategory, onGenerateCusto
           >
             <Card style={[styles.customCard, { backgroundColor: Colors.blackout }]} padding="md">
               <View style={styles.customCardContent}>
-                <Text style={styles.customCardIcon}>🎲</Text>
+                <View style={styles.customCardIcon}>
+                  <DiceIcon size={32} />
+                </View>
                 <View style={styles.customCardText}>
                   <Text style={styles.customCardTitle}>Custom Puzzle</Text>
                   <Text style={styles.customCardSubtitle}>
@@ -308,7 +311,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   customCardIcon: {
-    fontSize: 32,
     marginRight: Spacing.md,
   },
   customCardText: {

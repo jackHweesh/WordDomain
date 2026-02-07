@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { Coordinate } from '../core/types';
 import Tile from './Tile';
 import { Colors } from '../src/styles/theme';
+
+let fogBoardInstanceCounter = 0;
 
 interface FogOfWarBoardProps {
   grid: string[][];
@@ -16,6 +18,7 @@ interface FogOfWarBoardProps {
   onTilePress: (coord: Coordinate) => void;
   animationTrigger?: { coord: Coordinate; type: 'select' | 'unselect' | 'invalid' } | null;
   fogMap: boolean[][]; // 2D array: true = hidden, false = visible
+  boardRevealKey?: string | number;
 }
 
 export default function FogOfWarBoard({ 
@@ -29,7 +32,8 @@ export default function FogOfWarBoard({
   glowingHintTiles,
   onTilePress, 
   animationTrigger,
-  fogMap
+  fogMap,
+  boardRevealKey
 }: FogOfWarBoardProps) {
   const isSelected = (coord: Coordinate): boolean => {
     return selection.some(sel => sel.row === coord.row && sel.col === coord.col);
@@ -101,6 +105,14 @@ export default function FogOfWarBoard({
   const gridSize = grid[0].length;
   const screenWidth = Dimensions.get('window').width;
   const tileSize = Math.floor((screenWidth - 40) / gridSize) - 4; // Match Board calculation
+  // Reveal should only run when a new board screen instance appears.
+  // Use a stable per-mount key (or a parent-provided one, e.g. navigation route key).
+  const internalRevealKeyRef = useRef<number | null>(null);
+  if (internalRevealKeyRef.current == null) {
+    fogBoardInstanceCounter += 1;
+    internalRevealKeyRef.current = fogBoardInstanceCounter;
+  }
+  const revealKey = boardRevealKey ?? internalRevealKeyRef.current;
   
   // Fog size is 140% of tile size to ensure seamless coverage with no visible edges
   // Larger overlap eliminates any gaps or seams between adjacent fog overlays
@@ -159,6 +171,7 @@ export default function FogOfWarBoard({
                 const isFading = fadingTiles && fadingTiles.has(tileKey);
                 const isCurrentStart = coord.row === start.row && coord.col === start.col;
                 const fogged = isFogged(rowIndex, colIndex);
+                const revealDelayMs = 280 + ((rowIndex + colIndex) * 110) + (colIndex * 24);
                 
                 const getAnimationTrigger = (): 'select' | 'unselect' | 'invalid' | null => {
                   if (animationTrigger && 
@@ -191,6 +204,8 @@ export default function FogOfWarBoard({
                         size={tileSize}
                         animationTrigger={getAnimationTrigger()}
                         isFading={isFading || false}
+                        revealKey={revealKey}
+                        revealDelayMs={revealDelayMs}
                       />
                     ) : (
                       // Empty space placeholder when tile is used - matches Classic mode

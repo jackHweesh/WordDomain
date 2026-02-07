@@ -7,11 +7,11 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  InteractionManager,
 } from 'react-native';
 import { Category } from '../services/progressStorage';
 import { getUnlockedPuzzles, getMedalsForCategory, isPuzzleUnlocked } from '../services/fogOfWarProgressStorage';
-import { getPuzzlesForCategory } from '../services/puzzleLoader';
-import { PuzzleData } from '../core/types';
+import { getPuzzleCount } from '../services/puzzleLoader';
 import Card from '../components/Card';
 import MedalIcon from '../components/MedalIcon';
 import { Colors, Spacing, Radius, Fonts } from '../src/styles/theme';
@@ -35,28 +35,66 @@ const CATEGORY_TITLES: { [key in Category]: string } = {
 const NUM_COLUMNS = 3;
 
 export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBack }: FogOfWarCategoryScreenProps) {
-  const [puzzles, setPuzzles] = useState<PuzzleData[]>([]);
-  const [unlockedPuzzles, setUnlockedPuzzles] = useState<number[]>([]);
+  // Only need puzzle IDs for this screen; loading full puzzles can stall JS and cause animation to miss.
+  const [puzzleIds, setPuzzleIds] = useState<number[]>([1, 2, 3, 4, 5]); // optimistic default for instant render
+  const [unlockedPuzzles, setUnlockedPuzzles] = useState<number[]>([1]); // puzzle 1 is always unlocked
   const [medals, setMedals] = useState<{ [key: string]: 'gold' | 'silver' | 'bronze' }>({});
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnims = useRef<{ [key: number]: Animated.Value }>({}).current;
+  const loadRequestIdRef = useRef(0);
 
   useEffect(() => {
     loadCategoryData();
   }, [category]);
 
-  const loadCategoryData = async () => {
-    try {
-      const [puzzleList, unlocked, categoryMedals] = await Promise.all([
-        getPuzzlesForCategory(category),
-        getUnlockedPuzzles(),
-        getMedalsForCategory(category),
-      ]);
+  useEffect(() => {
+    // Run fade only once the list exists, and after interactions to avoid jank.
+    if (puzzleIds.length === 0) return;
 
-      // Limit to 5 puzzles for now (as requested)
-      const limitedPuzzles = puzzleList.slice(0, 5);
-      setPuzzles(limitedPuzzles);
-      setUnlockedPuzzles(unlocked[category] || [1]); // At least puzzle 1 is unlocked
-      setMedals(categoryMedals);
+    fadeAnim.setValue(0);
+    slideAnim.setValue(30);
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+
+    return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (task as any)?.cancel?.();
+    };
+  }, [category, puzzleIds.length, fadeAnim, slideAnim]);
+
+  const loadCategoryData = async () => {
+    const requestId = (loadRequestIdRef.current += 1);
+    try {
+      // Keep grid responsive: determine how many puzzle IDs to show first.
+      const count = await getPuzzleCount(category);
+      if (requestId !== loadRequestIdRef.current) return;
+      const maxToShow = Math.min(count || 5, 5); // Limit to 5 puzzles for now (as requested)
+      setPuzzleIds(Array.from({ length: maxToShow }, (_, i) => i + 1));
+
+      // Load unlock/medal progress in the background.
+      Promise.all([getUnlockedPuzzles(), getMedalsForCategory(category)])
+        .then(([unlocked, categoryMedals]) => {
+          if (requestId !== loadRequestIdRef.current) return;
+          setUnlockedPuzzles(unlocked[category] || [1]);
+          setMedals(categoryMedals);
+        })
+        .catch((error) => {
+          console.error(`Error loading Fog of War progress for category ${category}:`, error);
+        });
     } catch (error) {
       console.error(`Error loading category ${category}:`, error);
     }
@@ -72,8 +110,8 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
   };
 
   const getProgressPercentage = (): number => {
-    if (puzzles.length === 0) return 0;
-    return (getCompletedCount() / puzzles.length) * 100;
+    if (puzzleIds.length === 0) return 0;
+    return (getCompletedCount() / puzzleIds.length) * 100;
   };
 
   const handlePuzzlePress = async (puzzleId: number) => {
@@ -105,8 +143,8 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
     });
   };
 
-  const renderPuzzleCard = ({ item, index }: { item: PuzzleData; index: number }) => {
-    const puzzleId = index + 1;
+  const renderPuzzleCard = ({ item, index }: { item: number; index: number }) => {
+    const puzzleId = item;
     const isUnlocked = unlockedPuzzles.includes(puzzleId);
     const medal = getMedal(puzzleId);
 
@@ -116,12 +154,23 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
 
     const screenWidth = Dimensions.get('window').width;
     const cardSize = (screenWidth - Spacing.md * 2 - Spacing.md * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+    const rowIndex = Math.floor(index / NUM_COLUMNS);
+    const stagger = Math.min(rowIndex, 6) * 8;
 
     return (
       <Animated.View
         style={[
           {
-            transform: [{ scale: scaleAnims[puzzleId] }],
+            opacity: fadeAnim,
+            transform: [
+              {
+                translateY: slideAnim.interpolate({
+                  inputRange: [0, 30],
+                  outputRange: [0, 30 + stagger],
+                }),
+              },
+              { scale: scaleAnims[puzzleId] },
+            ],
           },
         ]}
       >
@@ -193,7 +242,7 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
         
         <View style={styles.headerBottom}>
           <Text style={styles.subtitle}>
-            {puzzles.length} puzzles available · {completedCount} completed
+            {puzzleIds.length} puzzles available · {completedCount} completed
           </Text>
         </View>
 
@@ -212,9 +261,9 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
 
       {/* Puzzle Grid */}
       <FlatList
-        data={puzzles}
+        data={puzzleIds}
         renderItem={renderPuzzleCard}
-        keyExtractor={(item, index) => `puzzle-${index + 1}`}
+        keyExtractor={(puzzleId) => `puzzle-${puzzleId}`}
         numColumns={NUM_COLUMNS}
         contentContainerStyle={styles.gridContainer}
         columnWrapperStyle={styles.gridRow}

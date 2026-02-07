@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, Animated } from 'react-native';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, Animated, Easing } from 'react-native';
 import { Coordinate } from '../core/types';
 import { Colors } from '../src/styles/theme';
 
@@ -12,12 +12,18 @@ interface TileProps {
   size?: number;
   animationTrigger?: 'select' | 'unselect' | 'invalid' | null;
   isFading?: boolean;
+  revealKey?: string | number;
+  revealDelayMs?: number;
 }
 
-export default function Tile({ letter, type, disabled, onPress, size, animationTrigger, isFading = false }: TileProps) {
+export default function Tile({ letter, type, disabled, onPress, size, animationTrigger, isFading = false, revealKey, revealDelayMs = 0 }: TileProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const translateXAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
+  // Start reveal values "hidden" to prevent any first-frame flash before the effect runs.
+  const revealScaleAnim = useRef(new Animated.Value(0.92)).current;
+  const revealTranslateYAnim = useRef(new Animated.Value(7)).current;
+  const revealOpacityAnim = useRef(new Animated.Value(0)).current;
   const shadowOffsetY = useRef(new Animated.Value(2)).current; // Idle: 2, pressed: 4, selected: 3
   const shadowOpacity = useRef(new Animated.Value(0.15)).current; // Idle: 0.15, pressed: 0.22, selected: 0.18
   const shadowRadius = useRef(new Animated.Value(3)).current; // Idle: 3, pressed: 6, selected: 4
@@ -45,6 +51,53 @@ export default function Tile({ letter, type, disabled, onPress, size, animationT
       elevation.setValue(4);
     }
   }, []); // Only run on mount
+
+  // Board reveal ("pop-in") animation: transform/opacity only, ends at current grid position and size.
+  // Use layout effect so when the puzzle key changes, we reset to "hidden" before the next frame is drawn (prevents flashing).
+  useLayoutEffect(() => {
+    // Only animate real tiles; empty placeholders should stay transparent and static.
+    // Important: do NOT depend on `letter` here, otherwise gameplay updates can retrigger the reveal.
+    if (!letter) return;
+
+    // Reset reveal state
+    revealScaleAnim.setValue(0.92);
+    revealTranslateYAnim.setValue(7);
+    revealOpacityAnim.setValue(0);
+
+    const delay = Math.max(0, revealDelayMs || 0);
+
+    Animated.sequence([
+      Animated.delay(delay),
+      Animated.parallel([
+        Animated.timing(revealOpacityAnim, {
+          toValue: 1,
+          duration: 520,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(revealTranslateYAnim, {
+          toValue: 0,
+          duration: 840,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(revealScaleAnim, {
+            toValue: 1.06,
+            duration: 560,
+            easing: Easing.out(Easing.back(1.15)),
+            useNativeDriver: true,
+          }),
+          Animated.timing(revealScaleAnim, {
+            toValue: 1,
+            duration: 440,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    ]).start();
+  }, [revealKey, revealDelayMs, letter, revealScaleAnim, revealTranslateYAnim, revealOpacityAnim]);
 
   // Handle animation triggers
   useEffect(() => {
@@ -235,6 +288,9 @@ export default function Tile({ letter, type, disabled, onPress, size, animationT
   );
   }
 
+  const combinedScale = Animated.multiply(scaleAnim, revealScaleAnim);
+  const combinedOpacity = Animated.multiply(opacityAnim, revealOpacityAnim);
+
   const getTileStyle = (): ViewStyle => {
   switch (type) {
       case 'start':
@@ -338,10 +394,11 @@ export default function Tile({ letter, type, disabled, onPress, size, animationT
       style={[
         {
           transform: [
-            { scale: scaleAnim },
+            { scale: combinedScale },
             { translateX: translateXAnim },
+            { translateY: revealTranslateYAnim },
           ],
-          opacity: opacityAnim,
+          opacity: combinedOpacity,
         },
       ]}
     >

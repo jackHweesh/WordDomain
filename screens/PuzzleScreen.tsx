@@ -24,6 +24,7 @@ import { Category, saveMedal, unlockNextPuzzle } from '../services/progressStora
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
 import MedalIcon from '../components/MedalIcon';
+import LightbulbIcon from '../components/LightbulbIcon';
 import PathVisualization from '../components/PathVisualization';
 import Confetti from '../components/Confetti';
 import { Colors, Spacing, Fonts, Radius, Shadows } from '../src/styles/theme';
@@ -938,7 +939,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
               onPress={() => setShowSolutions(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.iconText}>💡</Text>
+              <LightbulbIcon />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.headerIconButton}
@@ -963,6 +964,7 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             glowingHintTiles={glowingHintTiles}
             onTilePress={handleTilePress}
             animationTrigger={tileAnimationTrigger}
+            boardRevealKey={isCustomMode ? `custom:${puzzle.id}` : `${category}:${puzzleId}`}
           />
         </View>
 
@@ -1122,7 +1124,10 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>💡 Get a Hint</Text>
+              <View style={styles.modalTitleContainer}>
+                <LightbulbIcon size={30} />
+                <Text style={styles.modalTitle}>Get a Hint</Text>
+              </View>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowSolutions(false)}
@@ -1406,6 +1411,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.tileBorder,
     paddingBottom: Spacing.md,
+  },
+  modalTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
   modalTitle: {
     ...Fonts.subtitle,

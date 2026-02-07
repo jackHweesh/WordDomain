@@ -25,6 +25,7 @@ import { getBlackoutPuzzle } from '../services/blackoutPuzzleCache';
 import PrimaryButton from '../components/PrimaryButton';
 import SecondaryButton from '../components/SecondaryButton';
 import TrophyIcon from '../components/TrophyIcon';
+import LightbulbIcon from '../components/LightbulbIcon';
 import PathVisualization from '../components/PathVisualization';
 import Confetti from '../components/Confetti';
 import { Colors, Spacing, Fonts, Radius, Shadows } from '../src/styles/theme';
@@ -963,7 +964,7 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.iconText}>💡</Text>
+              <LightbulbIcon />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.headerIconButton}
@@ -988,6 +989,7 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
             glowingHintTiles={glowingHintTiles}
             onTilePress={handleTilePress}
             animationTrigger={tileAnimationTrigger}
+            boardRevealKey={isCustomMode ? `custom:${puzzle.id}` : `${category}:${puzzleId}`}
           />
         </View>
 
@@ -1199,7 +1201,10 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>💡 Get a Hint</Text>
+              <View style={styles.modalTitleContainer}>
+                <LightbulbIcon size={30} />
+                <Text style={styles.modalTitle}>Get a Hint</Text>
+              </View>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowHints(false)}
@@ -1576,6 +1581,11 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.tileBorder,
+  },
+  modalTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
   modalTitle: {
     ...Fonts.title,

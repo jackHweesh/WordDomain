@@ -7,10 +7,10 @@ import {
   FlatList,
   Dimensions,
   Animated,
+  InteractionManager,
 } from 'react-native';
 import { Category, getUnlockedPuzzles, getMedalsForCategory, isPuzzleUnlocked } from '../services/progressStorage';
-import { getPuzzlesForCategory } from '../services/puzzleLoader';
-import { PuzzleData } from '../core/types';
+import { getPuzzleCount } from '../services/puzzleLoader';
 import Card from '../components/Card';
 import MedalIcon from '../components/MedalIcon';
 import { Colors, Spacing, Radius, Fonts } from '../src/styles/theme';
@@ -34,26 +34,71 @@ const CATEGORY_TITLES: { [key in Category]: string } = {
 const NUM_COLUMNS = 3;
 
 export default function CategoryPuzzleScreen({ category, onSelectPuzzle, onBack }: CategoryPuzzleScreenProps) {
-  const [puzzles, setPuzzles] = useState<PuzzleData[]>([]);
+  // NOTE: For this screen we only need puzzle IDs (1..N), not full puzzle objects.
+  // Loading full puzzles can stall JS on first load and make the fade animation miss its window.
+  const [puzzleIds, setPuzzleIds] = useState<number[]>([]);
   const [unlockedPuzzles, setUnlockedPuzzles] = useState<number[]>([]);
   const [medals, setMedals] = useState<{ [key: string]: 'gold' | 'silver' | 'bronze' }>({});
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnims = useRef<{ [key: number]: Animated.Value }>({}).current;
+  const loadRequestIdRef = useRef(0);
 
   useEffect(() => {
     loadCategoryData();
   }, [category]);
 
-  const loadCategoryData = async () => {
-    try {
-      const [puzzleList, unlocked, categoryMedals] = await Promise.all([
-        getPuzzlesForCategory(category),
-        getUnlockedPuzzles(),
-        getMedalsForCategory(category),
-      ]);
+  useEffect(() => {
+    // Run the fade only once the data is ready.
+    // Otherwise, on slower loads the animation completes while the list is still empty
+    // and the cards appear later with no fade ("laggy" / "sometimes doesn't show").
+    if (puzzleIds.length === 0) return;
 
-      setPuzzles(puzzleList);
-      setUnlockedPuzzles(unlocked[category] || [1]); // At least puzzle 1 is unlocked
-      setMedals(categoryMedals);
+    fadeAnim.setValue(0);
+    slideAnim.setValue(30);
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+
+    return () => {
+      // Some RN versions expose cancel(); guard to be safe.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (task as any)?.cancel?.();
+    };
+  }, [category, puzzleIds.length, fadeAnim, slideAnim]);
+
+  const loadCategoryData = async () => {
+    const requestId = (loadRequestIdRef.current += 1);
+    try {
+      // IMPORTANT: render the grid ASAP so the fade is reliable.
+      // AsyncStorage reads can be slow (especially when backing out of a puzzle),
+      // but we don't need them to show the cards themselves.
+      const count = await getPuzzleCount(category);
+      if (requestId !== loadRequestIdRef.current) return;
+      setPuzzleIds(Array.from({ length: count }, (_, i) => i + 1));
+
+      // Load progress in the background; update cards when ready.
+      Promise.all([getUnlockedPuzzles(), getMedalsForCategory(category)])
+        .then(([unlocked, categoryMedals]) => {
+          if (requestId !== loadRequestIdRef.current) return;
+          setUnlockedPuzzles(unlocked[category] || [1]); // At least puzzle 1 is unlocked
+          setMedals(categoryMedals);
+        })
+        .catch((error) => {
+          console.error(`Error loading progress for category ${category}:`, error);
+        });
     } catch (error) {
       console.error(`Error loading category ${category}:`, error);
     }
@@ -69,8 +114,8 @@ export default function CategoryPuzzleScreen({ category, onSelectPuzzle, onBack 
   };
 
   const getProgressPercentage = (): number => {
-    if (puzzles.length === 0) return 0;
-    return (getCompletedCount() / puzzles.length) * 100;
+    if (puzzleIds.length === 0) return 0;
+    return (getCompletedCount() / puzzleIds.length) * 100;
   };
 
   const handlePuzzlePress = async (puzzleId: number) => {
@@ -102,8 +147,8 @@ export default function CategoryPuzzleScreen({ category, onSelectPuzzle, onBack 
     });
   };
 
-  const renderPuzzleCard = ({ item, index }: { item: PuzzleData; index: number }) => {
-    const puzzleId = index + 1;
+  const renderPuzzleCard = ({ item, index }: { item: number; index: number }) => {
+    const puzzleId = item;
     const isUnlocked = unlockedPuzzles.includes(puzzleId);
     const medal = getMedal(puzzleId);
 
@@ -113,12 +158,23 @@ export default function CategoryPuzzleScreen({ category, onSelectPuzzle, onBack 
 
     const screenWidth = Dimensions.get('window').width;
     const cardSize = (screenWidth - Spacing.md * 2 - Spacing.md * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+    const rowIndex = Math.floor(index / NUM_COLUMNS);
+    const stagger = Math.min(rowIndex, 6) * 8;
 
     return (
       <Animated.View
         style={[
           {
-            transform: [{ scale: scaleAnims[puzzleId] }],
+            opacity: fadeAnim,
+            transform: [
+              {
+                translateY: slideAnim.interpolate({
+                  inputRange: [0, 30],
+                  outputRange: [0, 30 + stagger],
+                }),
+              },
+              { scale: scaleAnims[puzzleId] },
+            ],
           },
         ]}
       >
@@ -189,7 +245,7 @@ export default function CategoryPuzzleScreen({ category, onSelectPuzzle, onBack 
         
         <View style={styles.headerBottom}>
           <Text style={styles.subtitle}>
-            {puzzles.length} puzzles available · {completedCount} completed
+            {puzzleIds.length} puzzles available · {completedCount} completed
           </Text>
         </View>
 
@@ -208,9 +264,9 @@ export default function CategoryPuzzleScreen({ category, onSelectPuzzle, onBack 
 
       {/* Puzzle Grid */}
       <FlatList
-        data={puzzles}
+        data={puzzleIds}
         renderItem={renderPuzzleCard}
-        keyExtractor={(item, index) => `puzzle-${index + 1}`}
+        keyExtractor={(puzzleId) => `puzzle-${puzzleId}`}
         numColumns={NUM_COLUMNS}
         contentContainerStyle={styles.gridContainer}
         columnWrapperStyle={styles.gridRow}

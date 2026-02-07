@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Coordinate } from '../core/types';
 import Tile from './Tile';
+
+let boardInstanceCounter = 0;
 
 interface BoardProps {
   grid: string[][];
@@ -14,9 +16,10 @@ interface BoardProps {
   glowingHintTiles?: Set<string>; // Tiles that are currently glowing green
   onTilePress: (coord: Coordinate) => void;
   animationTrigger?: { coord: Coordinate; type: 'select' | 'unselect' | 'invalid' } | null;
+  boardRevealKey?: string | number;
 }
 
-export default function Board({ grid, start, end, selection, usedTiles, fadingTiles, hintedTiles, glowingHintTiles, onTilePress, animationTrigger }: BoardProps) {
+export default function Board({ grid, start, end, selection, usedTiles, fadingTiles, hintedTiles, glowingHintTiles, onTilePress, animationTrigger, boardRevealKey }: BoardProps) {
   const isSelected = (coord: Coordinate): boolean => {
     return selection.some(sel => sel.row === coord.row && sel.col === coord.col);
   };
@@ -87,6 +90,14 @@ export default function Board({ grid, start, end, selection, usedTiles, fadingTi
   const gridSize = grid[0].length;
   const screenWidth = Dimensions.get('window').width;
   const tileSize = Math.floor((screenWidth - 40) / gridSize) - 4; // 40 for padding, 4 for gaps
+  // Reveal should only run when a new board screen instance appears.
+  // Use a stable per-mount key (or a parent-provided one, e.g. navigation route key).
+  const internalRevealKeyRef = useRef<number | null>(null);
+  if (internalRevealKeyRef.current == null) {
+    boardInstanceCounter += 1;
+    internalRevealKeyRef.current = boardInstanceCounter;
+  }
+  const revealKey = boardRevealKey ?? internalRevealKeyRef.current;
 
   // Create subtle wood grain texture lines
   const woodGrainLines = Array.from({ length: 12 }, (_, i) => (
@@ -126,6 +137,7 @@ export default function Board({ grid, start, end, selection, usedTiles, fadingTi
             const isUsed = usedTiles && usedTiles.has(tileKey);
             const isFading = fadingTiles && fadingTiles.has(tileKey);
             const isCurrentStart = coord.row === start.row && coord.col === start.col;
+            const revealDelayMs = 280 + ((rowIndex + colIndex) * 110) + (colIndex * 24);
             
             // Hide used tiles unless they're the current start tile or currently fading
             if (isUsed && !isCurrentStart && !isFading) {
@@ -154,6 +166,8 @@ export default function Board({ grid, start, end, selection, usedTiles, fadingTi
               size={tileSize}
               animationTrigger={getAnimationTrigger()}
               isFading={isFading || false}
+              revealKey={revealKey}
+              revealDelayMs={revealDelayMs}
             />
           );
           })}

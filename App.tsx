@@ -14,13 +14,30 @@ import BlackoutCategoryScreen from './screens/BlackoutCategoryScreen';
 import BlackoutPuzzleScreen from './screens/BlackoutPuzzleScreen';
 import { Category } from './services/progressStorage';
 import { audioManager } from './services/audioManager';
+import StatsScreen from './screens/StatsScreen';
+import { getUsername as loadUsername, setUsername as persistUsername } from './services/userProfile';
 
-type Screen = 'home' | 'select' | 'category' | 'puzzle' | 'custom' | 'fogSelect' | 'fogCategory' | 'fogPuzzle' | 'fogCustom' | 'blackoutSelect' | 'blackoutCategory' | 'blackoutPuzzle' | 'blackoutCustom';
+type Screen =
+  | 'home'
+  | 'select'
+  | 'category'
+  | 'puzzle'
+  | 'custom'
+  | 'fogSelect'
+  | 'fogCategory'
+  | 'fogPuzzle'
+  | 'fogCustom'
+  | 'blackoutSelect'
+  | 'blackoutCategory'
+  | 'blackoutPuzzle'
+  | 'blackoutCustom'
+  | 'stats';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
   const [selectedPuzzleId, setSelectedPuzzleId] = useState<number | undefined>();
+  const [username, setUsername] = useState<string>('Player');
 
   const hideNavBarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkNavBarIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -49,6 +66,15 @@ export default function App() {
       };
       cleanupAudio();
     };
+  }, []);
+
+  // Load username once (persisted)
+  useEffect(() => {
+    const load = async () => {
+      const name = await loadUsername();
+      setUsername(name);
+    };
+    load();
   }, []);
 
   // Force status bar to always be black
@@ -158,6 +184,18 @@ export default function App() {
     setCurrentScreen('blackoutSelect');
   };
 
+  const handleOpenStats = () => {
+    setCurrentScreen('stats');
+  };
+
+  const handleUpdateUsername = async (next: string): Promise<{ value: string; error: string | null }> => {
+    const result = await persistUsername(next);
+    if (!result.error) {
+      setUsername(result.value);
+    }
+    return result;
+  };
+
   const handleBack = () => {
     if (currentScreen === 'puzzle') {
       setCurrentScreen('category');
@@ -176,6 +214,8 @@ export default function App() {
     } else if (currentScreen === 'blackoutCategory' || currentScreen === 'blackoutCustom') {
       setCurrentScreen('blackoutSelect');
     } else if (currentScreen === 'blackoutSelect') {
+      setCurrentScreen('home');
+    } else if (currentScreen === 'stats') {
       setCurrentScreen('home');
     }
   };
@@ -199,6 +239,15 @@ export default function App() {
             onSelectClassic={handleSelectClassic}
             onSelectFogOfWar={handleSelectFogOfWar}
             onSelectBlackout={handleSelectBlackout}
+            username={username}
+            onUpdateUsername={handleUpdateUsername}
+            onOpenStats={handleOpenStats}
+          />
+        )}
+        {currentScreen === 'stats' && (
+          <StatsScreen
+            username={username}
+            onBack={handleBack}
           />
         )}
         {currentScreen === 'select' && (
