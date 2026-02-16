@@ -218,7 +218,6 @@ export default function BlackoutCategoryScreen({ category, onSelectPuzzle, onBac
     );
   };
 
-  const completedCount = getCompletedCount();
   const progressPercentage = getProgressPercentage();
 
   return (
@@ -238,12 +237,6 @@ export default function BlackoutCategoryScreen({ category, onSelectPuzzle, onBac
           </TouchableOpacity>
           <Text style={styles.title}>{CATEGORY_TITLES[category]}</Text>
           <View style={styles.headerSpacer} />
-        </View>
-        
-        <View style={styles.headerBottom}>
-          <Text style={styles.subtitle}>
-            {puzzleIds.length} puzzles available · {completedCount} completed
-          </Text>
         </View>
 
         {/* Progress Bar */}

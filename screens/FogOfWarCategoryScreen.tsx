@@ -218,7 +218,6 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
     );
   };
 
-  const completedCount = getCompletedCount();
   const progressPercentage = getProgressPercentage();
 
   return (
@@ -238,12 +237,6 @@ export default function FogOfWarCategoryScreen({ category, onSelectPuzzle, onBac
           </TouchableOpacity>
           <Text style={styles.title}>{CATEGORY_TITLES[category]}</Text>
           <View style={styles.headerSpacer} />
-        </View>
-        
-        <View style={styles.headerBottom}>
-          <Text style={styles.subtitle}>
-            {puzzleIds.length} puzzles available · {completedCount} completed
-          </Text>
         </View>
 
         {/* Progress Bar */}
@@ -298,7 +291,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 32,
-    color: Colors.surfaceDark,
+    color: '#000000',
     fontWeight: '300',
   },
   title: {

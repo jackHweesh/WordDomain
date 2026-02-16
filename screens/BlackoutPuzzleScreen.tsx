@@ -96,6 +96,7 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
   const winCardScale = useRef(new Animated.Value(0.9)).current;
   const winCardOpacity = useRef(new Animated.Value(0)).current;
   const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenBalanceLoaded, setTokenBalanceLoaded] = useState(false);
   const [showTokenReward, setShowTokenReward] = useState<number>(0);
   const [tokenCounterPosition, setTokenCounterPosition] = useState<{ x: number; y: number } | undefined>();
   const tokenCounterRef = useRef<View>(null);
@@ -103,10 +104,14 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
   const refreshTokenBalance = useCallback(async () => {
     const balance = await getTokenBalance();
     setTokenBalance(balance);
+    setTokenBalanceLoaded(true);
   }, []);
 
   const initializeGame = useCallback(async () => {
     setLoading(true);
+    // Clear board immediately so no old tiles show while new puzzle loads (fixes custom level size change)
+    setPuzzle(null);
+    setGameState(null);
     try {
       let newPuzzle: PuzzleData;
       
@@ -1010,6 +1015,18 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
           >
             <Text style={styles.chevron}>‹</Text>
           </TouchableOpacity>
+
+          <View
+            ref={tokenCounterRef}
+            style={styles.tokenCounterWrap}
+            onLayout={() => {
+              tokenCounterRef.current?.measureInWindow((x, y, width, height) => {
+                setTokenCounterPosition({ x: x + width / 2, y: y + height / 2 });
+              });
+            }}
+          >
+            <TokenIcon size={22} count={tokenBalanceLoaded ? tokenBalance : undefined} />
+          </View>
           
           {isCustomMode ? (
             <TouchableOpacity 
@@ -1036,17 +1053,6 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
             >
               <LightbulbIcon />
             </TouchableOpacity>
-            <View
-              ref={tokenCounterRef}
-              style={styles.tokenCounterWrap}
-              onLayout={() => {
-                tokenCounterRef.current?.measureInWindow((x, y, width, height) => {
-                  setTokenCounterPosition({ x: x + width / 2, y: y + height / 2 });
-                });
-              }}
-            >
-              <TokenIcon size={22} count={tokenBalance} />
-            </View>
             <TouchableOpacity 
               style={styles.headerIconButton}
               onPress={() => setShowInstructions(true)}
@@ -1060,6 +1066,7 @@ export default function BlackoutPuzzleScreen({ category, puzzleId, onBack, onSel
         {/* Grid */}
         <View style={styles.boardContainer}>
           <Board
+            key={`board-${puzzle.id}-${gameState.grid.length}-${gameState.grid[0].length}`}
             grid={gameState.grid}
             start={gameState.currentStart}
             end={puzzle.end}
@@ -1419,7 +1426,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     ...Fonts.body,
-    color: Colors.textSecondary,
+    color: '#000000',
   },
   header: {
     flexDirection: 'row',
@@ -1469,6 +1476,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 24,
+    color: '#000000',
   },
   boardContainer: {
     width: '100%',
@@ -1541,7 +1549,7 @@ const styles = StyleSheet.create({
     color: Colors.accent,
   },
   failureCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
     width: screenWidth * 0.85,
@@ -1600,7 +1608,7 @@ const styles = StyleSheet.create({
     elevation: 9999,
   },
   winCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
     width: screenWidth * 0.85,
@@ -1679,7 +1687,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     width: screenWidth * 0.85,
     maxWidth: 400,
@@ -1766,7 +1774,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   sizeSelectorModal: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     width: screenWidth * 0.7,
     ...Shadows.soft,
@@ -1790,7 +1798,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   sizeOptionTextSelected: {
-    color: Colors.background,
+    color: '#F6F1E7',
   },
   hintPathsContainer: {
     alignSelf: 'flex-start',

@@ -7,7 +7,7 @@
     "userInterfaceStyle": "light",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#8062E8"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#8062E8"
       }
     },
     "web": {}

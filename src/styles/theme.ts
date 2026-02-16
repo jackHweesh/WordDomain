@@ -5,12 +5,12 @@
  */
 
 export const Colors = {
-  background: '#F6F1E7',          // light warm parchment
+  background: 'transparent',      // app uses blue/violet gradient from root
   surface: '#E1C7A3',             // light tan
   surfaceDark: '#5A3B25',         // deep brown for headers / board frames
   accent: '#F4B345',              // warm gold for primary CTAs
   accentSecondary: '#6495ED',     // cornflower blue for selected tiles
-  textPrimary: '#3C2A1E',         // espresso
+  textPrimary: '#000000',        // black (headers, primary text)
   textSecondary: '#7C5C42',       // muted brown
   danger: '#BF4B4B',              // error
   tileBackground: '#F8F3EB',      // subtle off-white tile fill

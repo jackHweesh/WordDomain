@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StatusBar, Platform } from 'react-native';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as NavigationBar from 'expo-navigation-bar';
 import PuzzleScreen from './screens/PuzzleScreen';
 import PuzzleSelectScreen from './screens/PuzzleSelectScreen';
@@ -12,12 +13,14 @@ import FogOfWarPuzzleScreen from './screens/FogOfWarPuzzleScreen';
 import BlackoutSelectScreen from './screens/BlackoutSelectScreen';
 import BlackoutCategoryScreen from './screens/BlackoutCategoryScreen';
 import BlackoutPuzzleScreen from './screens/BlackoutPuzzleScreen';
+import SplashScreen from './screens/SplashScreen';
 import { Category } from './services/progressStorage';
 import { audioManager } from './services/audioManager';
 import StatsScreen from './screens/StatsScreen';
 import { getUsername as loadUsername, setUsername as persistUsername } from './services/userProfile';
 
 type Screen =
+  | 'splash'
   | 'home'
   | 'select'
   | 'category'
@@ -34,7 +37,7 @@ type Screen =
   | 'stats';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
   const [selectedPuzzleId, setSelectedPuzzleId] = useState<number | undefined>();
   const [username, setUsername] = useState<string>('Player');
@@ -76,6 +79,7 @@ export default function App() {
     };
     load();
   }, []);
+
 
   // Force status bar to always be black
   useEffect(() => {
@@ -227,12 +231,21 @@ export default function App() {
   return (
     <>
       <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="#FAF8F3" 
+        barStyle="light-content" 
+        backgroundColor="#8062E8" 
         translucent={false}
         hidden={false}
         animated={false}
       />
+      {currentScreen === 'splash' ? (
+        <SplashScreen onComplete={() => setCurrentScreen('home')} />
+      ) : (
+      <LinearGradient
+        colors={['#8062E8', '#4A47ED']}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
       <SafeAreaView style={styles.safeArea}>
         {currentScreen === 'home' && (
           <GameModeSelectScreen
@@ -320,13 +333,18 @@ export default function App() {
           />
         )}
       </SafeAreaView>
+      </LinearGradient>
+      )}
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAF8F3', // Match the cream background
+    backgroundColor: 'transparent',
   },
 });

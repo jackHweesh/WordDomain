@@ -54,6 +54,7 @@ export default function GameModeSelectScreen({
   const [editUsernameText, setEditUsernameText] = useState(username);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenBalanceLoaded, setTokenBalanceLoaded] = useState(false);
   const [classicPercent, setClassicPercent] = useState(0);
   const [fogPercent, setFogPercent] = useState(0);
   const [blackoutPercent, setBlackoutPercent] = useState(0);
@@ -62,6 +63,7 @@ export default function GameModeSelectScreen({
   const loadTokenBalance = useCallback(async () => {
     const balance = await getTokenBalance();
     setTokenBalance(balance);
+    setTokenBalanceLoaded(true);
   }, []);
 
   const loadProgress = useCallback(async () => {
@@ -151,7 +153,7 @@ export default function GameModeSelectScreen({
       {/* Top row: coins left, profile + settings right */}
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
-          <TokenIcon size={28} count={tokenBalance} />
+          <TokenIcon size={28} count={tokenBalanceLoaded ? tokenBalance : undefined} />
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -492,7 +494,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   settingsButtonEmoji: {
-    fontSize: 20,
+    fontSize: 25, // 1.5x of original 20 (gear only; circle unchanged)
+    textAlign: 'center',
+    lineHeight: 30,
+    includeFontPadding: false,
   },
   brandCenter: {
     alignItems: 'center',
@@ -588,7 +593,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
     width: Dimensions.get('window').width * 0.8,
@@ -684,7 +689,7 @@ const styles = StyleSheet.create({
   },
 
   editModalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
     width: Dimensions.get('window').width * 0.88,

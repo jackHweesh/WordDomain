@@ -96,6 +96,7 @@ export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSel
   const winCardScale = useRef(new Animated.Value(0.9)).current;
   const winCardOpacity = useRef(new Animated.Value(0)).current;
   const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenBalanceLoaded, setTokenBalanceLoaded] = useState(false);
   const [showTokenReward, setShowTokenReward] = useState<number>(0);
   const [tokenCounterPosition, setTokenCounterPosition] = useState<{ x: number; y: number } | undefined>();
   const tokenCounterRef = useRef<View>(null);
@@ -103,6 +104,7 @@ export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSel
   const refreshTokenBalance = useCallback(async () => {
     const balance = await getTokenBalance();
     setTokenBalance(balance);
+    setTokenBalanceLoaded(true);
   }, []);
 
   // Initialize fogMap: all tiles hidden except start and its neighbors
@@ -185,6 +187,10 @@ export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSel
 
   const initializeGame = useCallback(async () => {
     setLoading(true);
+    // Clear board immediately so no old tiles show while new puzzle loads (fixes custom level size change)
+    setPuzzle(null);
+    setGameState(null);
+    setFogMap([]);
     try {
       let newPuzzle: PuzzleData;
       
@@ -1088,6 +1094,18 @@ export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSel
           >
             <Text style={styles.chevron}>‹</Text>
           </TouchableOpacity>
+
+          <View
+            ref={tokenCounterRef}
+            style={styles.tokenCounterWrap}
+            onLayout={() => {
+              tokenCounterRef.current?.measureInWindow((x, y, width, height) => {
+                setTokenCounterPosition({ x: x + width / 2, y: y + height / 2 });
+              });
+            }}
+          >
+            <TokenIcon size={22} count={tokenBalanceLoaded ? tokenBalance : undefined} />
+          </View>
           
           {isCustomMode ? (
             <TouchableOpacity 
@@ -1111,17 +1129,6 @@ export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSel
             >
               <LightbulbIcon />
             </TouchableOpacity>
-            <View
-              ref={tokenCounterRef}
-              style={styles.tokenCounterWrap}
-              onLayout={() => {
-                tokenCounterRef.current?.measureInWindow((x, y, width, height) => {
-                  setTokenCounterPosition({ x: x + width / 2, y: y + height / 2 });
-                });
-              }}
-            >
-              <TokenIcon size={22} count={tokenBalance} />
-            </View>
             <TouchableOpacity 
               style={styles.headerIconButton}
               onPress={() => setShowInstructions(true)}
@@ -1135,6 +1142,7 @@ export default function FogOfWarPuzzleScreen({ category, puzzleId, onBack, onSel
         {/* Grid with Fog of War */}
         <View style={styles.boardContainer}>
           <FogOfWarBoard
+            key={`board-${puzzle.id}-${gameState.grid.length}-${gameState.grid[0].length}`}
             grid={gameState.grid}
             start={gameState.currentStart}
             end={puzzle.end}
@@ -1452,7 +1460,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.md,
     ...Fonts.body,
-    color: Colors.textPrimary,
+    color: '#000000',
   },
   loadingSubtext: {
     marginTop: Spacing.xs,
@@ -1500,7 +1508,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 32,
-    color: Colors.surfaceDark,
+    color: '#000000',
     fontWeight: '300',
   },
   headerTitleContainer: {
@@ -1534,7 +1542,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 24,
-    color: Colors.surfaceDark,
+    color: '#000000',
   },
   boardContainer: {
     width: '100%',
@@ -1562,7 +1570,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     width: Dimensions.get('window').width * 0.9,
     maxHeight: Dimensions.get('window').height * 0.8,

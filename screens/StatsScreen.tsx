@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 32,
-    color: Colors.surfaceDark,
+    color: '#000000',
     fontWeight: '300',
   },
   headerCenter: {
