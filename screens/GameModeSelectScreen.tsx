@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,19 @@ import {
 } from 'react-native';
 import { Colors, Spacing, Radius, Fonts } from '../src/styles/theme';
 import WordDomainLogo from '../components/WordDomainLogo';
+import TokenIcon from '../components/TokenIcon';
+import ProgressRing from '../components/ProgressRing';
 import { audioManager } from '../services/audioManager';
 import { SoundCategory } from '../services/audioManager';
 import { USERNAME_MAX_LENGTH } from '../services/userProfile';
+import { getTokenBalance } from '../services/tokenStorage';
+import { getCategories } from '../services/puzzleLoader';
+import { Category } from '../services/progressStorage';
+import * as classicProgress from '../services/progressStorage';
+import * as fogProgress from '../services/fogOfWarProgressStorage';
+import * as blackoutProgress from '../services/blackoutProgressStorage';
+import { getPuzzleCount } from '../services/puzzleLoader';
+import { getBlackoutPuzzleCount } from '../services/blackoutPuzzleCache';
 
 interface GameModeSelectScreenProps {
   onSelectClassic: () => void;
@@ -43,6 +53,60 @@ export default function GameModeSelectScreen({
   const [showEditUsernameModal, setShowEditUsernameModal] = useState(false);
   const [editUsernameText, setEditUsernameText] = useState(username);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const [classicPercent, setClassicPercent] = useState(0);
+  const [fogPercent, setFogPercent] = useState(0);
+  const [blackoutPercent, setBlackoutPercent] = useState(0);
+  const [dailyPercent, setDailyPercent] = useState(0);
+
+  const loadTokenBalance = useCallback(async () => {
+    const balance = await getTokenBalance();
+    setTokenBalance(balance);
+  }, []);
+
+  const loadProgress = useCallback(async () => {
+    try {
+      const categories: Category[] = await getCategories();
+      if (categories.length === 0) return;
+
+      let classicCompleted = 0;
+      let classicTotal = 0;
+      let fogCompleted = 0;
+      let fogTotal = 0;
+      let blackoutCompleted = 0;
+      let blackoutTotal = 0;
+
+      for (const c of categories) {
+        const [classicMedals, fogMedals, blackoutTrophies, classicCount, fogCount, blackoutCount] = await Promise.all([
+          classicProgress.getMedalsForCategory(c),
+          fogProgress.getMedalsForCategory(c),
+          blackoutProgress.getTrophiesForCategory(c),
+          getPuzzleCount(c),
+          getPuzzleCount(c),
+          getBlackoutPuzzleCount(c),
+        ]);
+        classicCompleted += Object.keys(classicMedals).length;
+        classicTotal += classicCount;
+        fogCompleted += Object.keys(fogMedals).length;
+        fogTotal += fogCount;
+        blackoutCompleted += Object.keys(blackoutTrophies).length;
+        blackoutTotal += blackoutCount;
+      }
+
+      setClassicPercent(classicTotal > 0 ? Math.round((classicCompleted / classicTotal) * 100) : 0);
+      setFogPercent(fogTotal > 0 ? Math.round((fogCompleted / fogTotal) * 100) : 0);
+      setBlackoutPercent(blackoutTotal > 0 ? Math.round((blackoutCompleted / blackoutTotal) * 100) : 0);
+      // Daily: 0 or 100% (1 per day); no storage yet so always 0
+      setDailyPercent(0);
+    } catch (e) {
+      // keep defaults 0
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTokenBalance();
+    loadProgress();
+  }, [loadTokenBalance, loadProgress]);
 
   useEffect(() => {
     // Fade and slide animation on mount
@@ -84,19 +148,44 @@ export default function GameModeSelectScreen({
 
   return (
     <View style={styles.root}>
-      {/* Profile button (top-right) */}
-      <TouchableOpacity
-        style={styles.profileButton}
-        onPress={() => {
-          audioManager.playSound(SoundCategory.UI);
-          setShowProfilePopover(true);
-        }}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="Open profile menu"
-      >
-        <Text style={styles.profileButtonEmoji}>👤</Text>
-      </TouchableOpacity>
+      {/* Top row: coins left, profile + settings right */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <TokenIcon size={28} count={tokenBalance} />
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              audioManager.playSound(SoundCategory.UI);
+              setShowProfilePopover(true);
+            }}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile menu"
+          >
+            <Text style={styles.profileButtonEmoji}>👤</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              audioManager.playSound(SoundCategory.UI);
+              setShowComingSoonModal(true);
+            }}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
+          >
+            <Text style={styles.settingsButtonEmoji}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Centered WordDomain logo + title (original font size) */}
+      <View style={styles.brandCenter}>
+        <WordDomainLogo size={80} />
+        <Text style={styles.gameTitle}>WordDomain</Text>
+      </View>
 
       <ScrollView
         style={styles.container}
@@ -112,121 +201,115 @@ export default function GameModeSelectScreen({
             },
           ]}
         >
-          {/* Logo and Title */}
-          <View style={styles.logoContainer}>
-            <WordDomainLogo size={80} />
-            <Text style={styles.gameTitle}>WordDomain</Text>
-          </View>
-
-          {/* Game Mode Buttons */}
+          {/* Game Mode Cards */}
           <View style={styles.buttonsContainer}>
-            <Animated.View
-              style={[
-                {
-                  opacity: fadeAnim,
-                  transform: [
-                    {
-                      translateY: slideAnim.interpolate({
-                        inputRange: [0, 30],
-                        outputRange: [0, 30 + 0 * 10],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+            <TouchableOpacity
+              style={styles.classicButton}
+              onPress={() => {
+                audioManager.playSound(SoundCategory.UI);
+                onSelectClassic();
+              }}
+              activeOpacity={0.8}
             >
-              <TouchableOpacity
-                style={styles.classicButton}
-                onPress={() => {
-                  audioManager.playSound(SoundCategory.UI);
-                  onSelectClassic();
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modeButtonText}>Classic</Text>
-              </TouchableOpacity>
-            </Animated.View>
+              <View style={styles.cardInner}>
+                <View style={styles.ringWrap}>
+                  <ProgressRing
+                    size={52}
+                    strokeWidth={8}
+                    percent={classicPercent}
+                    trackColor="#EDE0CC"
+                    progressColor="#F5F0E8"
+                  >
+                    <Text style={styles.circlePercentText}>{classicPercent}</Text>
+                  </ProgressRing>
+                </View>
+                <View style={styles.cardCenter}>
+                  <Text style={styles.modeButtonText}>Classic</Text>
+                  <Text style={styles.modeSubtext}>{classicPercent}% Complete</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
 
-            <Animated.View
-              style={[
-                {
-                  opacity: fadeAnim,
-                  transform: [
-                    {
-                      translateY: slideAnim.interpolate({
-                        inputRange: [0, 30],
-                        outputRange: [0, 30 + 1 * 10],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+            <TouchableOpacity
+              style={styles.fogButton}
+              onPress={() => {
+                audioManager.playSound(SoundCategory.UI);
+                onSelectFogOfWar();
+              }}
+              activeOpacity={0.8}
             >
-              <TouchableOpacity
-                style={styles.fogButton}
-                onPress={() => {
-                  audioManager.playSound(SoundCategory.UI);
-                  onSelectFogOfWar();
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modeButtonText}>Fog of War</Text>
-              </TouchableOpacity>
-            </Animated.View>
+              <View style={styles.cardInner}>
+                <View style={styles.ringWrap}>
+                  <ProgressRing
+                    size={52}
+                    strokeWidth={8}
+                    percent={fogPercent}
+                    trackColor="#D4D4D4"
+                    progressColor="#EEEEEE"
+                  >
+                    <Text style={styles.circlePercentText}>{fogPercent}</Text>
+                  </ProgressRing>
+                </View>
+                <View style={styles.cardCenter}>
+                  <Text style={styles.modeButtonText}>Fog of War</Text>
+                  <Text style={styles.modeSubtext}>{fogPercent}% Complete</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
 
-            <Animated.View
-              style={[
-                {
-                  opacity: fadeAnim,
-                  transform: [
-                    {
-                      translateY: slideAnim.interpolate({
-                        inputRange: [0, 30],
-                        outputRange: [0, 30 + 2 * 10],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+            <TouchableOpacity
+              style={styles.blackoutButton}
+              onPress={() => {
+                audioManager.playSound(SoundCategory.UI);
+                onSelectBlackout();
+              }}
+              activeOpacity={0.8}
             >
-              <TouchableOpacity
-                style={styles.blackoutButton}
-                onPress={() => {
-                  audioManager.playSound(SoundCategory.UI);
-                  onSelectBlackout();
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.blackoutButtonText}>Blackout</Text>
-              </TouchableOpacity>
-            </Animated.View>
+              <View style={styles.cardInner}>
+                <View style={styles.ringWrap}>
+                  <ProgressRing
+                    size={52}
+                    strokeWidth={8}
+                    percent={blackoutPercent}
+                    trackColor="#6B6B6B"
+                    progressColor="rgba(255,255,255,0.6)"
+                  >
+                    <Text style={styles.circlePercentTextLight}>{blackoutPercent}</Text>
+                  </ProgressRing>
+                </View>
+                <View style={styles.cardCenter}>
+                  <Text style={styles.blackoutButtonText}>Blackout</Text>
+                  <Text style={styles.modeSubtextLight}>{blackoutPercent}% Complete</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
 
-            <Animated.View
-              style={[
-                {
-                  opacity: fadeAnim,
-                  transform: [
-                    {
-                      translateY: slideAnim.interpolate({
-                        inputRange: [0, 30],
-                        outputRange: [0, 30 + 3 * 10],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+            <TouchableOpacity
+              style={styles.dailyButton}
+              onPress={() => {
+                audioManager.playSound(SoundCategory.UI);
+                setShowComingSoonModal(true);
+              }}
+              activeOpacity={0.8}
             >
-              <TouchableOpacity
-                style={styles.dailyButton}
-                onPress={() => {
-                  audioManager.playSound(SoundCategory.UI);
-                  setShowComingSoonModal(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modeButtonText}>Daily Puzzle</Text>
-              </TouchableOpacity>
-            </Animated.View>
+              <View style={styles.cardInner}>
+                <View style={styles.ringWrap}>
+                  <ProgressRing
+                    size={52}
+                    strokeWidth={8}
+                    percent={dailyPercent}
+                    trackColor="#8FB3F5"
+                    progressColor="#B8D0FF"
+                  >
+                    <Text style={styles.circlePercentText}>{dailyPercent}</Text>
+                  </ProgressRing>
+                </View>
+                <View style={styles.cardCenter}>
+                  <Text style={styles.modeButtonText}>Daily Puzzle</Text>
+                  <Text style={styles.modeSubtext}>{dailyPercent}% Complete</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
         </Animated.View>
 
@@ -293,21 +376,6 @@ export default function GameModeSelectScreen({
               accessibilityLabel="Open stats"
             >
               <Text style={styles.menuRowText}>Stats</Text>
-              <Text style={styles.menuRowChevron}>›</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuRow}
-              onPress={() => {
-                audioManager.playSound(SoundCategory.UI);
-                setShowProfilePopover(false);
-                setShowComingSoonModal(true);
-              }}
-              activeOpacity={0.7}
-              accessibilityRole="menuitem"
-              accessibilityLabel="Open settings"
-            >
-              <Text style={styles.menuRowText}>Settings</Text>
               <Text style={styles.menuRowChevron}>›</Text>
             </TouchableOpacity>
           </View>
@@ -389,14 +457,28 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: Spacing.md,
-    paddingTop: Spacing.xl * 2,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
     alignItems: 'center',
   },
-  profileButton: {
-    position: 'absolute',
-    top: Spacing.xl + Spacing.sm,
-    right: Spacing.md,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xl + Spacing.sm,
+    paddingBottom: Spacing.sm,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  iconButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -405,63 +487,55 @@ const styles = StyleSheet.create({
     borderColor: Colors.tileBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 50,
   },
   profileButtonEmoji: {
     fontSize: 22,
   },
-  animatedContainer: {
-    width: '100%',
-    alignItems: 'center',
+  settingsButtonEmoji: {
+    fontSize: 20,
   },
-  logoContainer: {
+  brandCenter: {
     alignItems: 'center',
-    marginBottom: Spacing.xl * 2,
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
   },
   gameTitle: {
     ...Fonts.title,
     fontSize: 40,
     color: Colors.textPrimary,
+    marginTop: Spacing.sm,
+  },
+  animatedContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
   buttonsContainer: {
     width: '100%',
     gap: Spacing.md,
   },
-  classicButton: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
+  cardInner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 60,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
   },
-  fogButton: {
-    backgroundColor: Colors.fogGrey,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 60,
+  ringWrap: {
+    marginRight: Spacing.md,
   },
-  blackoutButton: {
-    backgroundColor: Colors.blackout,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 60,
+  circlePercentText: {
+    ...Fonts.small,
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
-  dailyButton: {
-    backgroundColor: Colors.accentSecondary,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 60,
+  circlePercentTextLight: {
+    ...Fonts.small,
+    fontSize: 15,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
+  },
+  cardCenter: {
+    flex: 1,
   },
   modeButtonText: {
     ...Fonts.subtitle,
@@ -469,11 +543,43 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.textPrimary,
   },
+  modeSubtext: {
+    ...Fonts.small,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  modeSubtextLight: {
+    ...Fonts.small,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 2,
+  },
   blackoutButtonText: {
     ...Fonts.subtitle,
     fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  classicButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    minHeight: 60,
+  },
+  fogButton: {
+    backgroundColor: Colors.fogGrey,
+    borderRadius: Radius.lg,
+    minHeight: 60,
+  },
+  blackoutButton: {
+    backgroundColor: Colors.blackout,
+    borderRadius: Radius.lg,
+    minHeight: 60,
+  },
+  dailyButton: {
+    backgroundColor: Colors.accentSecondary,
+    borderRadius: Radius.lg,
+    minHeight: 60,
   },
   modalOverlay: {
     flex: 1,
@@ -525,7 +631,7 @@ const styles = StyleSheet.create({
   },
   popoverCard: {
     position: 'absolute',
-    top: Spacing.xl + Spacing.sm + 52,
+    top: Spacing.xl + Spacing.sm + 44 + Spacing.sm,
     right: Spacing.md,
     width: Math.min(Dimensions.get('window').width * 0.78, 320),
     backgroundColor: Colors.surface,

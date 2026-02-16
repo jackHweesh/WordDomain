@@ -10,6 +10,7 @@ import {
   Dimensions,
   SafeAreaView,
   Animated,
+  Alert,
 } from 'react-native';
 const screenWidth = Dimensions.get('window').width;
 import { generatePuzzle } from '../core/puzzleGenerator';
@@ -27,6 +28,9 @@ import MedalIcon from '../components/MedalIcon';
 import LightbulbIcon from '../components/LightbulbIcon';
 import PathVisualization from '../components/PathVisualization';
 import Confetti from '../components/Confetti';
+import TokenIcon from '../components/TokenIcon';
+import TokenRewardOverlay from '../components/TokenRewardOverlay';
+import { getTokenBalance, addTokens, deductTokens, claimDailyTokensIfEligible } from '../services/tokenStorage';
 import { Colors, Spacing, Fonts, Radius, Shadows } from '../src/styles/theme';
 import { audioManager } from '../services/audioManager';
 import { SoundCategory } from '../services/audioManager';
@@ -87,6 +91,15 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   const winModalOpacity = useRef(new Animated.Value(0)).current;
   const winCardScale = useRef(new Animated.Value(0.9)).current;
   const winCardOpacity = useRef(new Animated.Value(0)).current;
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const [showTokenReward, setShowTokenReward] = useState<number>(0);
+  const [tokenCounterPosition, setTokenCounterPosition] = useState<{ x: number; y: number } | undefined>();
+  const tokenCounterRef = useRef<View>(null);
+
+  const refreshTokenBalance = useCallback(async () => {
+    const balance = await getTokenBalance();
+    setTokenBalance(balance);
+  }, []);
 
   const initializeGame = useCallback(async () => {
     setLoading(true);
@@ -159,6 +172,25 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
   useEffect(() => {
     initializeGame();
   }, [initializeGame]);
+
+  useEffect(() => {
+    refreshTokenBalance();
+  }, [refreshTokenBalance]);
+
+  // After puzzle and tiles have loaded: claim daily tokens if eligible and show reward animation
+  useEffect(() => {
+    if (loading || !puzzle || !gameState) return;
+    let cancelled = false;
+    (async () => {
+      const granted = await claimDailyTokensIfEligible();
+      if (cancelled) return;
+      if (granted > 0) {
+        await refreshTokenBalance();
+        setShowTokenReward(granted);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [loading, puzzle, gameState, refreshTokenBalance]);
 
   // Preload big dictionary on mount to eliminate first word check delay
   useEffect(() => {
@@ -792,6 +824,47 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
     setShowSolutions(false);
   }, [puzzle, goldHintCount, getWordCoordinates, hintedTiles]);
 
+  const onCommonHintPress = useCallback(async () => {
+    if (tokenBalance < 1) {
+      Alert.alert('Not enough tokens', 'You need 1 token for a Common Hint. Open the app on a new day for 3 free tokens, or watch an ad for 2 tokens.');
+      return;
+    }
+    const { success } = await deductTokens(1);
+    if (!success) {
+      Alert.alert('Not enough tokens', 'You need 1 token for a Common Hint.');
+      return;
+    }
+    await refreshTokenBalance();
+    handleCommonHint();
+  }, [tokenBalance, handleCommonHint, refreshTokenBalance]);
+
+  const onGoldHintPress = useCallback(async () => {
+    if (tokenBalance < 3) {
+      Alert.alert('Not enough tokens', 'You need 3 tokens for a Gold Hint. Open the app on a new day for 3 free tokens, or watch an ad for 2 tokens.');
+      return;
+    }
+    const { success } = await deductTokens(3);
+    if (!success) {
+      Alert.alert('Not enough tokens', 'You need 3 tokens for a Gold Hint.');
+      return;
+    }
+    await refreshTokenBalance();
+    handleGoldHint();
+  }, [tokenBalance, handleGoldHint, refreshTokenBalance]);
+
+  const onWatchAdPress = useCallback(() => {
+    setShowSolutions(false);
+    setTimeout(() => {
+      setShowTokenReward(2);
+    }, 350);
+  }, []);
+
+  const handleTokenRewardComplete = useCallback(async () => {
+    if (showTokenReward === 2) await addTokens(2);
+    await refreshTokenBalance();
+    setShowTokenReward(0);
+  }, [showTokenReward, refreshTokenBalance]);
+
   const handleRestart = useCallback(() => {
     if (!gameState || !puzzle) return;
     
@@ -941,6 +1014,17 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             >
               <LightbulbIcon />
             </TouchableOpacity>
+            <View
+              ref={tokenCounterRef}
+              style={styles.tokenCounterWrap}
+              onLayout={() => {
+                tokenCounterRef.current?.measureInWindow((x, y, width, height) => {
+                  setTokenCounterPosition({ x: x + width / 2, y: y + height / 2 });
+                });
+              }}
+            >
+              <TokenIcon size={22} count={tokenBalance} />
+            </View>
             <TouchableOpacity 
               style={styles.headerIconButton}
               onPress={() => setShowInstructions(true)}
@@ -1137,22 +1221,46 @@ export default function PuzzleScreen({ category, puzzleId, onBack, onSelectPuzzl
             </View>
 
             <View style={styles.hintOptionsContainer}>
-              <PrimaryButton
-                title="Common Hint"
-                onPress={handleCommonHint}
-                style={styles.hintButton}
+              <TouchableOpacity
+                style={[
+                  styles.hintButton,
+                  (!puzzle?.easyWords || commonHintCount >= (puzzle?.easyWords?.length || 0)) && styles.hintButtonDisabled,
+                ]}
+                onPress={onCommonHintPress}
+                activeOpacity={0.8}
                 disabled={!puzzle?.easyWords || commonHintCount >= (puzzle?.easyWords?.length || 0)}
-              />
-              <PrimaryButton
-                title="Gold Hint"
-                onPress={handleGoldHint}
-                style={styles.hintButton}
+              >
+                <Text style={styles.hintButtonText}>Common Hint</Text>
+                <TokenIcon size={20} count={1} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.hintButton,
+                  (!puzzle?.optimalWords || goldHintCount >= (puzzle?.optimalWords?.length || 0)) && styles.hintButtonDisabled,
+                ]}
+                onPress={onGoldHintPress}
+                activeOpacity={0.8}
                 disabled={!puzzle?.optimalWords || goldHintCount >= (puzzle?.optimalWords?.length || 0)}
-              />
+              >
+                <Text style={styles.hintButtonText}>Gold Hint</Text>
+                <TokenIcon size={20} count={3} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.watchAdButton} onPress={onWatchAdPress} activeOpacity={0.8}>
+                <Text style={styles.watchAdButtonText}>Watch Ad</Text>
+                <TokenIcon size={20} count={2} />
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+
+      {showTokenReward > 0 && (
+        <TokenRewardOverlay
+          amount={showTokenReward}
+          onComplete={handleTokenRewardComplete}
+          targetPosition={tokenCounterPosition}
+        />
+      )}
 
       {/* Size Selector Modal (Custom Mode Only) */}
       {isCustomMode && (
@@ -1323,7 +1431,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    width: 88, // 40 + gap + 40 for two icons
+  },
+  tokenCounterWrap: {
+    minWidth: 44,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerIconButton: {
     width: 40,
@@ -1445,6 +1558,39 @@ const styles = StyleSheet.create({
   },
   hintButton: {
     width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.md,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    ...Shadows.soft,
+  },
+  hintButtonDisabled: {
+    opacity: 0.5,
+  },
+  hintButtonText: {
+    ...Fonts.body,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  watchAdButton: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.surfaceDark,
+  },
+  watchAdButtonText: {
+    ...Fonts.body,
+    fontWeight: '600',
+    color: Colors.textPrimary,
   },
   solutionSection: {
     marginBottom: Spacing.lg,

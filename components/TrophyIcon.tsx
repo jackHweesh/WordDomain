@@ -4,10 +4,19 @@ import { Colors } from '../src/styles/theme';
 
 interface TrophyIconProps {
   size?: number;
+  /** Use light/white colors for dark backgrounds (e.g. Blackout card) */
+  light?: boolean;
 }
 
-export default function TrophyIcon({ size = 20 }: TrophyIconProps) {
+export default function TrophyIcon({ size = 20, light = false }: TrophyIconProps) {
   const getColors = () => {
+    if (light) {
+      return {
+        main: '#FFFFFF',
+        accent: '#E0E0E0',
+        base: '#B0B0B0',
+      };
+    }
     return {
       main: '#FFD700',      // Gold
       accent: '#FFA500',    // Orange-gold
